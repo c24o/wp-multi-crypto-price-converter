@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <ruleset name="Multi-Crypto Convert Rules">
-    <rule ref="WordPress"/>
+    <rule ref="WordPress">
+        <!-- Allow PHP short array syntax across the project -->
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
+
+        <!-- Allow free alignment of multiple statements -->
+        <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning"/>
+    </rule>
     <rule ref="WordPress-Extra"/>
 
     <file>src</file>

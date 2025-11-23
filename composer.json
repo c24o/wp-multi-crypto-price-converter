@@ -4,7 +4,8 @@
   "type": "wordpress-plugin",
   "license": "MIT license",
   "require": {
-    "php": ">=8.0"
+    "php": ">=8.0",
+    "psr/simple-cache": "^3.0"
   },
   "require-dev": {
     "phpstan/phpstan": "^2.1",
