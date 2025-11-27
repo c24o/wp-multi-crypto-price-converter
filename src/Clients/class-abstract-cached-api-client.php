@@ -131,9 +131,13 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	/**
 	 * Retrieves the cached list of supported coins from the API.
 	 *
+	 * This method can optionally force a cache update before retrieving the
+	 * list because there is not a scheduled update for coin lists.
+	 *
+	 * @param bool $force_cache_update Whether to force a cache update before.
 	 * @return Coin_Entity[] The list of supported coins.
 	 */
-	public function get_available_coins(): array {
+	public function get_available_coins( bool $force_cache_update = false ): array {
 		$cached_data = $this->get_cache_object()->get( $this->get_coin_list_cache_key(), [] );
 		return is_array( $cached_data ) ? $cached_data : [];
 	}
