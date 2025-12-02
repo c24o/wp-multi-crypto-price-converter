@@ -14,14 +14,10 @@
     "wp-coding-standards/wpcs": "^3.2"
   },
   "autoload": {
-    "psr-4": {
-      "Multi_Crypto_Convert\\": "src/"
-    }
+    "classmap": ["src/"]
   },
   "autoload-dev": {
-    "psr-4": {
-      "Multi_Crypto_Convert\\Tests\\": "tests/"
-    }
+    "classmap": ["src/"]
   },
   "scripts": {
     "test": "phpunit",
