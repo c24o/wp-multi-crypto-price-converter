@@ -17,6 +17,7 @@ use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
 final class Admin_Settings {
 
 	private const PAGE_SLUG = 'mcc_settings';
+	private const SETTINGS_OPTION_NAME = 'mcc_general_settings';
 	private const REFRESH_COINS_ACTION = 'mcc_refresh_coins';
 	private const OPTION_API_SOURCE = 'mcc_api_source';
 	private const OPTION_API_KEY = 'mcc_api_key';
@@ -36,10 +37,23 @@ final class Admin_Settings {
 	}
 
 	/**
+	 * Retrieves the active cryptocurrency API client based on current settings.
+	 *
+	 * @return \Multi_Crypto_Convert\Clients\Crypto_API_Client The active API client instance.
+	 *
+	 * @throws \InvalidArgumentException If the configured API source is not supported.
+	 */
+	public function get_active_source_client() {
+		$settings = get_option( self::SETTINGS_OPTION_NAME, [] );
+		$source = $settings[ self::OPTION_API_SOURCE ] ?? '';
+		return $this->factory->create( $source );
+	}
+
+	/**
 	 * Registers the settings fields and sections.
 	 */
 	public function register_settings(): void {
-		register_setting( self::PAGE_SLUG, 'mcc_general_settings' );
+		register_setting( self::PAGE_SLUG, self::SETTINGS_OPTION_NAME );
 
 		$api_section = 'mcc_api_settings_section';
 		add_settings_section(
@@ -53,11 +67,11 @@ final class Admin_Settings {
 			'mcc_api_source',
 			__( 'API Source', 'multi-crypto-convert' ),
 			function () {
-				$current_source = get_option( self::PAGE_SLUG, [] )[ self::OPTION_API_SOURCE ] ?? '';
+				$current_source = get_option( self::SETTINGS_OPTION_NAME, [] )[ self::OPTION_API_SOURCE ] ?? '';
 				?>
 				<select
 					id="mcc_api_source"
-					name="<?php printf( '%s[%s]', esc_attr( self::PAGE_SLUG ), esc_attr( self::OPTION_API_SOURCE ) ); ?>"
+					name="<?php printf( '%s[%s]', esc_attr( self::SETTINGS_OPTION_NAME ), esc_attr( self::OPTION_API_SOURCE ) ); ?>"
 					class="regular-text"
 				>
 					<?php foreach ( $this->factory->get_available_sources() as $value => $label ) : ?>
@@ -79,12 +93,12 @@ final class Admin_Settings {
 			'mcc_api_key',
 			__( 'API Key', 'multi-crypto-convert' ),
 			function () {
-				$current_api_key = get_option( self::PAGE_SLUG, [] )[ self::OPTION_API_KEY ] ?? '';
+				$current_api_key = get_option( self::SETTINGS_OPTION_NAME, [] )[ self::OPTION_API_KEY ] ?? '';
 				?>
 				<input
-					type="password"
+					type="text"
 					id="mcc_api_key"
-					name="<?php printf( '%s[%s]', esc_attr( self::PAGE_SLUG ), esc_attr( self::OPTION_API_KEY ) ); ?>"
+					name="<?php printf( '%s[%s]', esc_attr( self::SETTINGS_OPTION_NAME ), esc_attr( self::OPTION_API_KEY ) ); ?>"
 					value="<?php echo esc_attr( $current_api_key ); ?>"
 					class="regular-text"
 				/>
@@ -130,8 +144,7 @@ final class Admin_Settings {
 
 		try {
 			// Create client to get coin count.
-			$current_source = get_option( self::PAGE_SLUG, [] )[ self::OPTION_API_SOURCE ] ?? '';
-			$client = $this->factory->create( $current_source );
+			$client = $this->get_active_source_client();
 			$coins = $client->get_available_coins();
 			$coin_count = count( $coins );
 		} catch ( \Exception $e ) {
@@ -166,7 +179,7 @@ final class Admin_Settings {
 			<h2><?php esc_html_e( 'Coin Management', 'multi-crypto-convert' ); ?></h2>
 
 			<p>
-				<?php esc_html_e( 'Cached coins:', 'multi-crypto-convert' ); ?>
+				<?php esc_html_e( 'Amount of coins found in the source:', 'multi-crypto-convert' ); ?>
 				<strong id="mcc-coin-count"><?php echo esc_html( $coin_count ); ?></strong>
 			</p>
 
@@ -244,7 +257,7 @@ final class Admin_Settings {
 
 		try {
 			// Get the selected API source.
-			$source = get_option( self::PAGE_SLUG, [] )[ self::OPTION_API_SOURCE ] ?? '';
+			$source = get_option( self::SETTINGS_OPTION_NAME, [] )[ self::OPTION_API_SOURCE ] ?? '';
 			if ( ! is_string( $source ) || empty( $source ) ) {
 				wp_send_json_error(
 					[
@@ -254,7 +267,7 @@ final class Admin_Settings {
 			}
 
 			// Create client instance from factory.
-			$client = $this->factory->create( $source );
+			$client = $this->get_active_source_client();
 
 			// Fetch and cache the coins list.
 			$coins = $client->get_available_coins( true );
