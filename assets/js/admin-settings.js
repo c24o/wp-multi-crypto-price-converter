@@ -6,10 +6,10 @@
  * @package Multi_Crypto_Convert
  */
 
-( function() {
+( function () {
 	'use strict';
 
-	document.addEventListener( 'DOMContentLoaded', function() {
+	document.addEventListener( 'DOMContentLoaded', function () {
 		const refreshBtn = document.getElementById( 'mcc-refresh-coins-btn' );
 		const statusDiv = document.getElementById( 'mcc-refresh-status' );
 		const statusMessage = document.getElementById( 'mcc-status-message' );
@@ -19,7 +19,7 @@
 			return;
 		}
 
-		refreshBtn.addEventListener( 'click', function( e ) {
+		refreshBtn.addEventListener( 'click', function ( e ) {
 			e.preventDefault();
 
 			// Get the nonce from the button.
@@ -38,8 +38,8 @@
 				method: 'POST',
 				body: formData,
 			} )
-				.then( response => response.json() )
-				.then( data => {
+				.then( ( response ) => response.json() )
+				.then( ( data ) => {
 					statusDiv.style.display = 'block';
 					statusDiv.className = data.success
 						? 'notice notice-success settings-error'
@@ -53,21 +53,25 @@
 							coinCount.textContent = data.data.coin_count;
 						}
 					} else {
-						statusMessage.textContent = data.data.message || 'An error occurred.';
+						statusMessage.textContent =
+							data.data.message || 'An error occurred.';
 					}
 
 					// Re-enable the button.
 					refreshBtn.disabled = false;
-					refreshBtn.textContent = mccSettings.buttonText || 'Refresh Coins List';
+					refreshBtn.textContent =
+						mccSettings.buttonText || 'Refresh Coins List';
 				} )
-				.catch( error => {
+				.catch( ( error ) => {
 					statusDiv.style.display = 'block';
 					statusDiv.className = 'notice notice-error settings-error';
-					statusMessage.textContent = 'Network error: ' + error.message;
+					statusMessage.textContent =
+						'Network error: ' + error.message;
 
 					// Re-enable the button.
 					refreshBtn.disabled = false;
-					refreshBtn.textContent = mccSettings.buttonText || 'Refresh Coins List';
+					refreshBtn.textContent =
+						mccSettings.buttonText || 'Refresh Coins List';
 				} );
 		} );
 	} );

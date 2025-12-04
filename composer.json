@@ -1,36 +1,40 @@
 {
-  "name": "c24o/multi-cripto-convert-wp-plugin",
-  "description": "A WordPress plugin for instant multi-crypto conversions.",
-  "type": "wordpress-plugin",
-  "license": "MIT license",
-  "require": {
-    "php": ">=8.0",
-    "psr/simple-cache": "^3.0"
-  },
-  "require-dev": {
-    "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^12.4",
-    "squizlabs/php_codesniffer": "^3.13",
-    "wp-coding-standards/wpcs": "^3.2"
-  },
-  "autoload": {
-    "classmap": ["src/"]
-  },
-  "autoload-dev": {
-    "classmap": ["src/"]
-  },
-  "scripts": {
-    "test": "phpunit",
-    "phpstan": "vendor/phpstan/phpstan/phpstan analyse --configuration=phpstan.neon",
-    "phpcs": "vendor/bin/phpcs --standard=phpcs.xml",
-    "lint": [
-      "@phpcs",
-      "@phpstan"
-    ]
-  },
-  "config": {
-    "allow-plugins": {
-      "dealerdirect/phpcodesniffer-composer-installer": true
-    }
-  }
+	"name": "c24o/multi-cripto-convert-wp-plugin",
+	"description": "A WordPress plugin for instant multi-crypto conversions.",
+	"type": "wordpress-plugin",
+	"license": "MIT license",
+	"require": {
+		"php": ">=8.0",
+		"psr/simple-cache": "^3.0"
+	},
+	"require-dev": {
+		"phpstan/phpstan": "^2.1",
+		"phpunit/phpunit": "^12.4",
+		"squizlabs/php_codesniffer": "^3.13",
+		"wp-coding-standards/wpcs": "^3.2"
+	},
+	"autoload": {
+		"classmap": [
+			"src/includes/"
+		]
+	},
+	"autoload-dev": {
+		"classmap": [
+			"src/includes/"
+		]
+	},
+	"scripts": {
+		"test": "phpunit",
+		"phpstan": "vendor/phpstan/phpstan/phpstan analyse --configuration=phpstan.neon",
+		"phpcs": "vendor/bin/phpcs --standard=phpcs.xml",
+		"lint": [
+			"@phpcs",
+			"@phpstan"
+		]
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
 }
