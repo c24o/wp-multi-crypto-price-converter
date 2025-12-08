@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.5/phpunit.xsd"
+	bootstrap="bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	verbose="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	stopOnFailure="false">
+
+	<coverage processUncoveredFiles="true">
+		<include>
+			<directory suffix=".php">../src</directory>
+			<file>../multi-crypto-convert.php</file>
+		</include>
+		<exclude>
+			<directory>../build</directory>
+			<directory>../vendor</directory>
+			<directory>../node_modules</directory>
+		</exclude>
+	</coverage>
+
+	<testsuites>
+		<testsuite name="Plugin Test Suite">
+			<directory>./</directory>
+		</testsuite>
+	</testsuites>
+
+</phpunit>
