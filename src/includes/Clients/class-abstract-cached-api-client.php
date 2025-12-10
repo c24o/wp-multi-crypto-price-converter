@@ -75,16 +75,18 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 		}
 
 		// If no specific coin IDs are provided, return all cached prices.
-		if ( empty( $coin_ids ) ) {
+		if ( empty( $coins ) ) {
 			return $cached_data;
 		}
 
 		// Filter the cached data to include only the requested coin IDs.
-		return array_filter(
-			$cached_data,
-			function ( Crypto_Price_Entity $entity ) use ( $coins ) {
-				return in_array( strtolower( $entity->symbol ), array_map( 'strtolower', $coins ), true );
-			}
+		return array_values(
+			array_filter(
+				$cached_data,
+				function ( Crypto_Price_Entity $entity ) use ( $coins ) {
+					return in_array( strtolower( $entity->symbol ), array_map( 'strtolower', $coins ), true );
+				}
+			)
 		);
 	}
 
@@ -161,14 +163,14 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 *
 	 * @return string The unique slug for this API client.
 	 */
-	abstract protected function get_api_client_slug(): string;
+	abstract public function get_api_client_slug(): string;
 
 	/**
 	 * Retrieves the cache implementation used by this client.
 	 *
 	 * @return CacheInterface The cache implementation.
 	 */
-	abstract protected function get_cache_object(): CacheInterface;
+	abstract public function get_cache_object(): CacheInterface;
 
 	/**
 	 * Returns the update interval data for scheduling.
@@ -176,7 +178,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * @return array The interval data.
 	 * @phpstan-return array{interval: int, display: string}
 	 */
-	abstract protected function get_prices_update_interval_data(): array;
+	abstract public function get_prices_update_interval_data(): array;
 
 	/**
 	 * Executes the raw HTTP request to the external API.
@@ -184,7 +186,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * @return array|\WP_Error The raw decoded response array from the API or an
 	 * error if the API call fails.
 	 */
-	abstract protected function fetch_prices(): array|\WP_Error;
+	abstract public function fetch_prices(): array|\WP_Error;
 
 	/**
 	 * Converts the raw API response into standardized internal entities.
@@ -192,7 +194,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * @param array $raw_data The unparsed response array from the API.
 	 * @return Crypto_Price_Entity[] A list of standardized price entities.
 	 */
-	abstract protected function transform_prices_to_entities( array $raw_data ): array;
+	abstract public function transform_prices_to_entities( array $raw_data ): array;
 
 	/**
 	 * Retrieves the raw coin list from the external API.
@@ -200,7 +202,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * @return array|\WP_Error The raw decoded coin list response array from the
 	 * API or an error if the API call fails.
 	 */
-	abstract protected function fetch_coin_list(): array|\WP_Error;
+	abstract public function fetch_coin_list(): array|\WP_Error;
 
 	/**
 	 * Converts the raw API coin list response into standardized Coin_Entity objects.
@@ -208,5 +210,5 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * @param array $raw_data The unparsed coin list response array from the API.
 	 * @return Coin_Entity[] A list of standardized coin entities.
 	 */
-	abstract protected function transform_coin_list_to_entities( array $raw_data ): array;
+	abstract public function transform_coin_list_to_entities( array $raw_data ): array;
 }

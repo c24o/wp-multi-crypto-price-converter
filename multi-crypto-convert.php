@@ -15,6 +15,7 @@ declare( strict_types=1 );
 namespace Multi_Crypto_Convert;
 
 use Multi_Crypto_Convert\Cache\Crypto_Option_Cache;
+use Multi_Crypto_Convert\Clients\Coingecko_Client;
 use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
 use Multi_Crypto_Convert\Settings\Admin_Settings;
 
@@ -82,5 +83,13 @@ add_action(
 		$cache = new Crypto_Option_Cache();
 		$factory = new Crypto_Client_Factory( $cache );
 		new Admin_Settings( $factory );
+
+		// Register API client settings.
+		add_action(
+			'mcc_register_client_settings_fields',
+			[ new Coingecko_Client( $cache ), 'register_settings_fields' ],
+			10,
+			2
+		);
 	}
 );

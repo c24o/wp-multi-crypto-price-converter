@@ -9,6 +9,7 @@ declare( strict_types=1 );
 
 namespace Multi_Crypto_Convert\Settings;
 
+use Multi_Crypto_Convert\Clients\Crypto_API_Client;
 use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
 
 /**
@@ -16,11 +17,10 @@ use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
  */
 final class Admin_Settings {
 
-	private const PAGE_SLUG = 'mcc_settings';
-	private const SETTINGS_OPTION_NAME = 'mcc_general_settings';
+	public const PAGE_SLUG = 'mcc_settings';
+	public const SETTINGS_OPTION_NAME = 'mcc_general_settings';
+	public const OPTION_API_SOURCE = 'mcc_api_source';
 	private const REFRESH_COINS_ACTION = 'mcc_refresh_coins';
-	private const OPTION_API_SOURCE = 'mcc_api_source';
-	private const OPTION_API_KEY = 'mcc_api_key';
 
 	/**
 	 * Constructor.
@@ -37,16 +37,36 @@ final class Admin_Settings {
 	}
 
 	/**
+	 * Retrieves the current settings.
+	 *
+	 * @return array The current settings array.
+	 */
+	public static function get_settings(): array {
+		$settings = get_option( self::SETTINGS_OPTION_NAME, [] );
+		return is_array( $settings ) ? $settings : [];
+	}
+
+	/**
 	 * Retrieves the active cryptocurrency API client based on current settings.
 	 *
-	 * @return \Multi_Crypto_Convert\Clients\Crypto_API_Client The active API client instance.
+	 * @return Crypto_API_Client The active API client instance.
 	 *
 	 * @throws \InvalidArgumentException If the configured API source is not supported.
 	 */
-	public function get_active_source_client() {
-		$settings = get_option( self::SETTINGS_OPTION_NAME, [] );
+	public function get_active_source_client(): Crypto_API_Client {
+		$settings = $this->get_settings();
 		$source = $settings[ self::OPTION_API_SOURCE ] ?? '';
-		return $this->factory->create( $source );
+		return $this->factory->create( $source, $this->get_settings(), $this->get_tracked_crypto_symbols() );
+	}
+
+	/**
+	 * Gets the list of cryptocurrency symbols used by existing converter
+	 * blocks.
+	 *
+	 * @return string[] The list of tracked cryptocurrency symbols.
+	 */
+	public function get_tracked_crypto_symbols(): array {
+		return [ 'btc', 'eth' ];
 	}
 
 	/**
@@ -67,7 +87,7 @@ final class Admin_Settings {
 			'mcc_api_source',
 			__( 'API Source', 'multi-crypto-convert' ),
 			function () {
-				$current_source = get_option( self::SETTINGS_OPTION_NAME, [] )[ self::OPTION_API_SOURCE ] ?? '';
+				$current_source = $this->get_settings()[ self::OPTION_API_SOURCE ] ?? '';
 				?>
 				<select
 					id="mcc_api_source"
@@ -89,27 +109,16 @@ final class Admin_Settings {
 			$api_section
 		);
 
-		add_settings_field(
-			'mcc_api_key',
-			__( 'API Key', 'multi-crypto-convert' ),
-			function () {
-				$current_api_key = get_option( self::SETTINGS_OPTION_NAME, [] )[ self::OPTION_API_KEY ] ?? '';
-				?>
-				<input
-					type="text"
-					id="mcc_api_key"
-					name="<?php printf( '%s[%s]', esc_attr( self::SETTINGS_OPTION_NAME ), esc_attr( self::OPTION_API_KEY ) ); ?>"
-					value="<?php echo esc_attr( $current_api_key ); ?>"
-					class="regular-text"
-				/>
-				<p class="description">
-					<?php esc_html_e( 'Enter your API key for the selected cryptocurrency data source.', 'multi-crypto-convert' ); ?>
-				</p>
-				<?php
-			},
-			self::PAGE_SLUG,
-			$api_section
-		);
+		/**
+		 * Allow clients to add their own settings fields.
+		 *
+		 * Each source might have different settings requirements to establish
+		 * the connection with its REST API.
+		 *
+		 * @param string $page_slug The settings page slug.
+		 * @param string $section_id The settings section ID.
+		 */
+		do_action( 'mcc_register_client_settings_fields', self::PAGE_SLUG, $api_section );
 	}
 
 	/**
@@ -152,6 +161,7 @@ final class Admin_Settings {
 		}
 
 		// Add error/update messages.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking for settings-updated query var.
 		if ( isset( $_GET['settings-updated'] ) ) {
 			add_settings_error(
 				self::PAGE_SLUG,
@@ -257,7 +267,7 @@ final class Admin_Settings {
 
 		try {
 			// Get the selected API source.
-			$source = get_option( self::SETTINGS_OPTION_NAME, [] )[ self::OPTION_API_SOURCE ] ?? '';
+			$source = $this->get_settings()[ self::OPTION_API_SOURCE ] ?? '';
 			if ( ! is_string( $source ) || empty( $source ) ) {
 				wp_send_json_error(
 					[

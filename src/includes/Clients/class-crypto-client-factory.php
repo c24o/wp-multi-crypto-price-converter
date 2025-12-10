@@ -33,13 +33,15 @@ final class Crypto_Client_Factory {
 	 * Creates and returns a crypto API client instance for the specified source.
 	 *
 	 * @param string $source The cryptocurrency data source identifier.
+	 * @param array<string, mixed> $settings Admin settings values.
+	 * @param string[] $tracked_symbols List of tracked cryptocurrency symbols.
 	 * @return Crypto_API_Client An instance of the requested crypto client.
 	 *
 	 * @throws \InvalidArgumentException If the source is not supported.
 	 */
-	public function create( string $source ): Crypto_API_Client {
+	public function create( string $source, array $settings, array $tracked_symbols ): Crypto_API_Client {
 		return match ( $source ) {
-			'coingecko' => new Coingecko_Client( $this->cache ),
+			'coingecko' => new Coingecko_Client( $this->cache, $settings, $tracked_symbols ),
 			default => throw new \InvalidArgumentException(
 				esc_html(
 					sprintf(

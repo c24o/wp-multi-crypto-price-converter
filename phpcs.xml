@@ -6,8 +6,17 @@
 
         <!-- Allow free alignment of multiple statements -->
         <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSameWarning"/>
+
+        <!-- Allow free alignment of array double arrows -->
+        <exclude name="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned"/>
     </rule>
+
     <rule ref="WordPress-Extra"/>
+
+    <!-- Allow free alignment of function parameters -->
+    <rule ref="Squiz.Commenting.FunctionComment">
+        <exclude name="Squiz.Commenting.FunctionComment.SpacingAfterParamType"/>
+    </rule>
 
     <file>src</file>
     <file>multi-crypto-convert.php</file>
