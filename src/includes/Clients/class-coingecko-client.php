@@ -25,6 +25,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	private const DEFAULT_TIMEOUT_SECONDS = 10;
 	public const API_KEY_FIELD = 'coingecko_api_key';
 	public const API_KEY_TYPE_FIELD = 'coingecko_api_key_type';
+	public const DEFAULT_API_KEY_TYPE = 'demo';
 
 	/**
 	 * Constructor.
@@ -56,7 +57,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 			self::API_KEY_FIELD,
 			__( 'API Key', 'multi-crypto-convert' ),
 			function () {
-				$current_api_key = Admin_Settings::get_settings()[ self::API_KEY_FIELD ] ?? '';
+				$current_api_key = $this->settings[ self::API_KEY_FIELD ] ?? '';
 				?>
 				<input
 					type="text"
@@ -78,18 +79,14 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 			self::API_KEY_TYPE_FIELD,
 			__( 'API Key Type', 'multi-crypto-convert' ),
 			function () {
-				$current_api_key_type = Admin_Settings::get_settings()[ self::API_KEY_TYPE_FIELD ] ?? 'demo';
-				$types = [
-					'demo' => __( 'Demo', 'multi-crypto-convert' ),
-					'paid' => __( 'Paid', 'multi-crypto-convert' ),
-				];
+				$current_api_key_type = $this->settings[ self::API_KEY_TYPE_FIELD ] ?? self::DEFAULT_API_KEY_TYPE;
 				?>
 				<select
 					id="mcc_api_key_type"
 					name="<?php printf( '%s[%s]', esc_attr( Admin_Settings::SETTINGS_OPTION_NAME ), esc_attr( self::API_KEY_TYPE_FIELD ) ); ?>"
 					class="regular-text"
 				>
-					<?php foreach ( $types as $value => $label ) : ?>
+					<?php foreach ( $this->get_api_key_types() as $value => $label ) : ?>
 						<option
 							value="<?php echo esc_attr( $value ); ?>"
 							<?php selected( $current_api_key_type, $value ); ?>
@@ -106,6 +103,36 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 			$page_slug,
 			$section_id
 		);
+	}
+
+	/**
+	 * Sanitize the settings fields for this API client.
+	 *
+	 * @param array $sanitized The sanitized settings array.
+	 * @param array $input The original input settings array.
+	 * @return array The sanitized settings array.
+	 */
+	public function sanitize_settings_fields( array $sanitized, array $input ): array {
+		$sanitized[ self::API_KEY_FIELD ] = sanitize_text_field( $input[ self::API_KEY_FIELD ] ?? '' );
+		$sanitized[ self::API_KEY_TYPE_FIELD ] = isset( $input[ self::API_KEY_TYPE_FIELD ] ) && in_array(
+			$input[ self::API_KEY_TYPE_FIELD ],
+			$this->get_api_key_types(),
+			true
+		) ? $input[ self::API_KEY_TYPE_FIELD ] : self::DEFAULT_API_KEY_TYPE;
+
+		return $sanitized;
+	}
+
+	/**
+	 * Get the available API key types for this client.
+	 *
+	 * @return array<string, string> The available API key types.
+	 */
+	public function get_api_key_types(): array {
+		return [
+			'demo' => __( 'Demo', 'multi-crypto-convert' ),
+			'paid' => __( 'Paid', 'multi-crypto-convert' ),
+		];
 	}
 
 	/**

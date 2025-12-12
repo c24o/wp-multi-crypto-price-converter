@@ -20,7 +20,9 @@ final class Admin_Settings {
 	public const PAGE_SLUG = 'mcc_settings';
 	public const SETTINGS_OPTION_NAME = 'mcc_general_settings';
 	public const OPTION_API_SOURCE = 'mcc_api_source';
+	public const OPTION_SELECTED_COINS = 'mcc_selected_coins';
 	private const REFRESH_COINS_ACTION = 'mcc_refresh_coins';
+	private const MAX_SELECTABLE_COINS = 50;
 
 	/**
 	 * Constructor.
@@ -37,11 +39,33 @@ final class Admin_Settings {
 	}
 
 	/**
+	 * Retrieves the selected coins for use in blocks.
+	 *
+	 * @return string[] The list of selected coin symbols (lowercase).
+	 */
+	public function get_selected_coins(): array {
+		$settings = $this->get_settings();
+		$selected = $settings[ self::OPTION_SELECTED_COINS ] ?? [];
+		if ( ! is_array( $selected ) ) {
+			return [];
+		}
+
+		return array_values(
+			array_filter(
+				$this->get_active_source_client()->get_available_coins(),
+				function ( $coin ) use ( $selected ) {
+					return in_array( $coin->api_id, $selected, true );
+				}
+			)
+		);
+	}
+
+	/**
 	 * Retrieves the current settings.
 	 *
 	 * @return array The current settings array.
 	 */
-	public static function get_settings(): array {
+	public function get_settings(): array {
 		$settings = get_option( self::SETTINGS_OPTION_NAME, [] );
 		return is_array( $settings ) ? $settings : [];
 	}
@@ -73,7 +97,13 @@ final class Admin_Settings {
 	 * Registers the settings fields and sections.
 	 */
 	public function register_settings(): void {
-		register_setting( self::PAGE_SLUG, self::SETTINGS_OPTION_NAME );
+		register_setting(
+			self::PAGE_SLUG,
+			self::SETTINGS_OPTION_NAME,
+			[
+				'sanitize_callback' => [ $this, 'sanitize_settings' ],
+			]
+		);
 
 		$api_section = 'mcc_api_settings_section';
 		add_settings_section(
@@ -84,7 +114,7 @@ final class Admin_Settings {
 		);
 
 		add_settings_field(
-			'mcc_api_source',
+			self::OPTION_API_SOURCE,
 			__( 'API Source', 'multi-crypto-convert' ),
 			function () {
 				$current_source = $this->get_settings()[ self::OPTION_API_SOURCE ] ?? '';
@@ -119,6 +149,156 @@ final class Admin_Settings {
 		 * @param string $section_id The settings section ID.
 		 */
 		do_action( 'mcc_register_client_settings_fields', self::PAGE_SLUG, $api_section );
+
+		// Coins Selection Section.
+		$coins_section = 'mcc_coins_selection_section';
+		add_settings_section(
+			$coins_section,
+			__( 'Available Coins for Blocks', 'multi-crypto-convert' ),
+			[ $this, 'render_coins_selection_section' ],
+			self::PAGE_SLUG
+		);
+
+		add_settings_field(
+			self::OPTION_SELECTED_COINS,
+			__( 'Select Coins', 'multi-crypto-convert' ),
+			[ $this, 'render_coins_selection_field' ],
+			self::PAGE_SLUG,
+			$coins_section
+		);
+	}
+
+	/**
+	 * Sanitizes and validates settings input.
+	 *
+	 * @param array $input The input settings array.
+	 * @return array The sanitized settings array.
+	 */
+	public function sanitize_settings( array $input ): array {
+		$sanitized = [];
+
+		// Sanitize API source.
+		if ( isset( $input[ self::OPTION_API_SOURCE ] ) ) {
+			$sanitized[ self::OPTION_API_SOURCE ] = sanitize_text_field( $input[ self::OPTION_API_SOURCE ] );
+		}
+
+		// Sanitize selected coins.
+		if ( isset( $input[ self::OPTION_SELECTED_COINS ] ) && is_array( $input[ self::OPTION_SELECTED_COINS ] ) ) {
+			$selected = array_map( 'sanitize_text_field', $input[ self::OPTION_SELECTED_COINS ] );
+			// Limit to MAX_SELECTABLE_COINS.
+			$selected = array_slice( $selected, 0, self::MAX_SELECTABLE_COINS );
+			$sanitized[ self::OPTION_SELECTED_COINS ] = array_filter( $selected );
+		}
+
+		/**
+		 * Allow clients to sanitize additional settings.
+		 *
+		 * @param array $sanitized The sanitized settings array.
+		 * @param array $input The original input settings array.
+		 */
+		$sanitized = apply_filters( 'mcc_sanitize_client_settings', $sanitized, $input );
+
+		return $sanitized;
+	}
+
+	/**
+	 * Renders the coins selection section description.
+	 */
+	public function render_coins_selection_section(): void {
+		echo wp_kses_post(
+			sprintf(
+				/* translators: %d is the maximum number of coins that can be selected */
+				__( 'Select which cryptocurrencies should be available for use in converter blocks (maximum %d coins). Only coins selected here will be available when configuring blocks.', 'multi-crypto-convert' ),
+				self::MAX_SELECTABLE_COINS
+			)
+		);
+	}
+
+	/**
+	 * Renders the coins selection field.
+	 */
+	public function render_coins_selection_field(): void {
+		try {
+			$client = $this->get_active_source_client();
+			$available_coins = $client->get_available_coins();
+			$selected_coins_ids = array_column( $this->get_selected_coins(), 'api_id' );
+
+			if ( empty( $available_coins ) ) {
+				echo '<p>' . esc_html__( 'No coins available. Please configure your API source and refresh the coin list.', 'multi-crypto-convert' ) . '</p>';
+				return;
+			}
+
+			$field_name = sprintf( '%s[%s][]', esc_attr( self::SETTINGS_OPTION_NAME ), esc_attr( self::OPTION_SELECTED_COINS ) );
+			?>
+			<select
+				id="mcc-coins-selection"
+				name="<?php echo esc_attr( $field_name ); ?>"
+				multiple="multiple"
+				class="mcc-coins-select2"
+			>
+				<?php foreach ( $available_coins as $coin ) : ?>
+					<option
+						value="<?php echo esc_attr( $coin->api_id ); ?>"
+						data-symbol="<?php echo esc_attr( strtolower( $coin->symbol ) ); ?>"
+						<?php selected( in_array( $coin->api_id, $selected_coins_ids, true ) ); ?>
+					>
+						<?php echo esc_html( sprintf( '%s (%s)', $coin->name, strtoupper( $coin->symbol ) ) ); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+			<p class="description">
+				<?php
+				printf(
+					/* translators: %1$d is the number of available coins in the source, %2$d is the maximum coins that can be selected. */
+					esc_html__( 'Available coins found in the source: %1$d. Maximum %2$d coins can be selected.', 'multi-crypto-convert' ),
+					count( $available_coins ),
+					esc_html( (string) self::MAX_SELECTABLE_COINS )
+				);
+				?>
+			</p>
+			<script>
+				(function() {
+					const maxCoins = <?php echo (int) self::MAX_SELECTABLE_COINS; ?>;
+					const $select = jQuery( '.mcc-coins-select2' );
+
+					// Initialize Select2 with search functionality.
+					$select.select2( {
+						width: '100%',
+						search: {
+							matcher: function( params, data ) {
+								const searchTerm = params.term.toLowerCase();
+								if ( ! searchTerm ) {
+									return data;
+								}
+
+								const matchesName = data.text.toLowerCase().includes( searchTerm );
+								const matchesSymbol = jQuery( data.element ).data( 'symbol' ).includes( searchTerm );
+
+								if ( matchesName || matchesSymbol ) {
+									return data;
+								}
+
+								return null;
+							}
+						}
+					} );
+
+					// Enforce maximum coin limit on change.
+					$select.on( 'change', function() {
+						const selectedCount = jQuery( this ).val().length;
+						if ( selectedCount > maxCoins ) {
+							// Get the current value before the last change.
+							const currentValue = $select.val() || [];
+							// Revert to the first maxCoins selections.
+							$select.val( currentValue.slice( 0, maxCoins ) ).trigger( 'change' );
+						}
+					} );
+				})();
+			</script>
+			<?php
+		} catch ( \Exception $e ) {
+			echo '<p>' . esc_html__( 'Error loading coins. Please configure your API source first.', 'multi-crypto-convert' ) . '</p>';
+		}
 	}
 
 	/**
@@ -219,6 +399,21 @@ final class Admin_Settings {
 			return;
 		}
 
+		// Enqueue Select2 CSS and JS from WordPress bundles.
+		wp_enqueue_style(
+			'select2',
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+			[],
+			'4.1.0-rc.0'
+		);
+		wp_enqueue_script(
+			'select2',
+			'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+			[ 'jquery' ],
+			'4.1.0-rc.0',
+			false
+		);
+
 		wp_enqueue_script(
 			'mcc-admin-settings',
 			plugins_url( 'assets/js/admin-settings.js', MCC_PLUGIN_FILE ),
@@ -281,6 +476,13 @@ final class Admin_Settings {
 
 			// Fetch and cache the coins list.
 			$coins = $client->get_available_coins( true );
+			if ( is_wp_error( $coins ) ) {
+				wp_send_json_error(
+					[
+						'message' => $coins->get_error_message(),
+					]
+				);
+			}
 
 			// Get the updated coin count.
 			$coin_count = count( $coins );
