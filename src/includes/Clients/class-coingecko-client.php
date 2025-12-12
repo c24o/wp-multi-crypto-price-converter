@@ -232,9 +232,19 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	public function transform_prices_to_entities( array $raw_data ): array {
 		$entities = [];
 
-		foreach ( $raw_data as $symbol => $data ) {
+		$coins = $this->get_available_coins();
+		foreach ( $raw_data as $id => $data ) {
+			$current_coin = array_find(
+				$coins,
+				function ( Coin_Entity $coin ) use ( $id ): bool {
+					return $coin->api_id === $id;
+				}
+			);
+			if ( null === $current_coin ) {
+				continue;
+			}
 			$entities[] = new Crypto_Price_Entity(
-				symbol       : $symbol,
+				symbol       : $current_coin->symbol,
 				price_usd    : (float) ( $data['usd'] ?? 0.0 ),
 				last_updated : $data['last_updated_at'] ?? time()
 			);

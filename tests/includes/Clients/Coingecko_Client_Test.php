@@ -32,6 +32,24 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 	private Crypto_Option_Cache $cache;
 
 	/**
+	 * Mock coins list  for testing.
+	 *
+	 * @var array<int, array<string, string>>
+	 */
+	private array $mock_coins = [
+		[
+			'id'     => 'bitcoin',
+			'symbol' => 'btc',
+			'name'   => 'Bitcoin',
+		],
+		[
+			'id'     => 'ethereum',
+			'symbol' => 'eth',
+			'name'   => 'Ethereum',
+		],
+	];
+
+	/**
 	 * Setup method called before each test.
 	 */
 	public function setUp(): void {
@@ -117,15 +135,19 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 			'ethereum' => [ 'usd' => 2500.00 ],
 		];
 
+		// Mock and cache the coin list to ensure coins are found.
+		$this->mock_http_request( 200, wp_json_encode( $this->mock_coins ) );
+		$this->client->fetch_and_cache_coins();
+
 		$result = $this->client->transform_prices_to_entities( $raw_data );
 
 		$this->assertIsArray( $result );
 		$this->assertCount( 2, $result );
 		$this->assertInstanceOf( Crypto_Price_Entity::class, $result[0] );
 		$this->assertInstanceOf( Crypto_Price_Entity::class, $result[1] );
-		$this->assertEquals( 'bitcoin', $result[0]->symbol );
+		$this->assertEquals( 'btc', $result[0]->symbol );
 		$this->assertEquals( 45000.00, $result[0]->price_usd );
-		$this->assertEquals( 'ethereum', $result[1]->symbol );
+		$this->assertEquals( 'eth', $result[1]->symbol );
 		$this->assertEquals( 2500.00, $result[1]->price_usd );
 	}
 
@@ -133,20 +155,7 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 	 * Test fetch_coin_list() with successful API response.
 	 */
 	public function test_fetch_coin_list_success(): void {
-		$mock_response = [
-			[
-				'id'     => 'bitcoin',
-				'symbol' => 'btc',
-				'name'   => 'Bitcoin',
-			],
-			[
-				'id'     => 'ethereum',
-				'symbol' => 'eth',
-				'name'   => 'Ethereum',
-			],
-		];
-
-		$this->mock_http_request( 200, wp_json_encode( $mock_response ) );
+		$this->mock_http_request( 200, wp_json_encode( $this->mock_coins ) );
 
 		$result = $this->client->fetch_coin_list();
 
@@ -172,20 +181,7 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 	 * Test transform_coin_list_to_entities() converts coin data correctly.
 	 */
 	public function test_transform_coin_list_to_entities(): void {
-		$raw_data = [
-			[
-				'id'     => 'bitcoin',
-				'symbol' => 'btc',
-				'name'   => 'Bitcoin',
-			],
-			[
-				'id'     => 'ethereum',
-				'symbol' => 'eth',
-				'name'   => 'Ethereum',
-			],
-		];
-
-		$result = $this->client->transform_coin_list_to_entities( $raw_data );
+		$result = $this->client->transform_coin_list_to_entities( $this->mock_coins );
 
 		$this->assertIsArray( $result );
 		$this->assertCount( 2, $result );
@@ -201,6 +197,11 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 	 * Test fetch_and_cache_prices() caches prices correctly.
 	 */
 	public function test_fetch_and_cache_prices(): void {
+		// Mock and cache the coin list to ensure coins are found.
+		$this->mock_http_request( 200, wp_json_encode( $this->mock_coins ) );
+		$this->client->fetch_and_cache_coins();
+		remove_all_filters( 'pre_http_request' );
+
 		$mock_response = [
 			'bitcoin'  => [ 'usd' => 45000.00 ],
 			'ethereum' => [ 'usd' => 2500.00 ],
@@ -224,20 +225,7 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 	 * Test fetch_and_cache_coins() caches coins correctly.
 	 */
 	public function test_fetch_and_cache_coins(): void {
-		$mock_response = [
-			[
-				'id'     => 'bitcoin',
-				'symbol' => 'btc',
-				'name'   => 'Bitcoin',
-			],
-			[
-				'id'     => 'ethereum',
-				'symbol' => 'eth',
-				'name'   => 'Ethereum',
-			],
-		];
-
-		$this->mock_http_request( 200, wp_json_encode( $mock_response ) );
+		$this->mock_http_request( 200, wp_json_encode( $this->mock_coins ) );
 
 		$this->assertEmpty( $this->client->get_available_coins() );
 
@@ -255,6 +243,11 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 	 * Test get_prices() filters coins correctly when available coins are cached.
 	 */
 	public function test_get_prices_with_coin_filtering(): void {
+		// Mock and cache the coin list to ensure coins are found.
+		$this->mock_http_request( 200, wp_json_encode( $this->mock_coins ) );
+		$this->client->fetch_and_cache_coins();
+		remove_all_filters( 'pre_http_request' );
+
 		$mock_response = [
 			'bitcoin'  => [ 'usd' => 45000.00 ],
 			'ethereum' => [ 'usd' => 2500.00 ],
@@ -266,33 +259,20 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 
 		$this->client->fetch_and_cache_prices();
 
-		$cached = $this->client->get_prices( [ 'ethereum' ] );
+		$cached = $this->client->get_prices( [ 'eth' ] );
 
 		$this->assertNotNull( $cached );
 		$this->assertIsArray( $cached );
 		$this->assertCount( 1, $cached );
 		$this->assertInstanceOf( Crypto_Price_Entity::class, $cached[0] );
-		$this->assertEquals( 'ethereum', $cached[0]->symbol );
+		$this->assertEquals( 'eth', $cached[0]->symbol );
 	}
 
 	/**
 	 * Test get_available_coins() returns cached coins.
 	 */
 	public function test_get_available_coins_returns_cached(): void {
-		$mock_response = [
-			[
-				'id'     => 'bitcoin',
-				'symbol' => 'btc',
-				'name'   => 'Bitcoin',
-			],
-			[
-				'id'     => 'ethereum',
-				'symbol' => 'eth',
-				'name'   => 'Ethereum',
-			],
-		];
-
-		$this->mock_http_request( 200, wp_json_encode( $mock_response ) );
+		$this->mock_http_request( 200, wp_json_encode( $this->mock_coins ) );
 
 		$this->assertEmpty( $this->client->get_available_coins() );
 

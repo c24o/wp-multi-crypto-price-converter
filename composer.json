@@ -17,12 +17,14 @@
 	},
 	"autoload": {
 		"classmap": [
-			"src/includes/"
+			"src/includes/",
+			"tests/includes/"
 		]
 	},
 	"autoload-dev": {
 		"classmap": [
-			"src/includes/"
+			"src/includes/",
+			"tests/includes/"
 		]
 	},
 	"scripts": {

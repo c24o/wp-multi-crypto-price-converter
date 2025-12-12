@@ -12,6 +12,7 @@ namespace Multi_Crypto_Convert\Clients;
 use Psr\SimpleCache\CacheInterface;
 use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
 use Multi_Crypto_Convert\Entities\Coin_Entity;
+use WP_Error;
 
 /**
  * Abstract Base Class for all Crypto API Clients.
@@ -101,16 +102,21 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 
 	/**
 	 * The core cron job method: Fetches prices, transforms them, and caches them.
+	 *
+	 * @return bool|WP_Error True on success, or WP_Error on failure.
 	 */
-	public function fetch_and_cache_prices(): void {
+	public function fetch_and_cache_prices(): bool|WP_Error {
 		// Execute the fetching logic.
 		$raw_data = $this->fetch_prices();
+		if ( is_wp_error( $raw_data ) ) {
+			return $raw_data;
+		}
 
 		// Transform the raw data into our standard Entity objects.
 		$entities = $this->transform_prices_to_entities( $raw_data );
 
 		// Cache the entities.
-		$this->get_cache_object()->set( $this->get_prices_cache_key(), $entities );
+		return $this->get_cache_object()->set( $this->get_prices_cache_key(), $entities );
 	}
 
 	/**
@@ -137,25 +143,38 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * list because there is not a scheduled update for coin lists.
 	 *
 	 * @param bool $force_cache_update Whether to force a cache update before.
-	 * @return Coin_Entity[] The list of supported coins.
+	 * @return Coin_Entity[]|WP_Error The list of supported coins or an error if
+	 * the cache needs to be updated and the request fails.
 	 */
-	public function get_available_coins( bool $force_cache_update = false ): array {
+	public function get_available_coins( bool $force_cache_update = false ): array|WP_Error {
+		// If forced, fetch and cache the latest coin list.
+		if ( $force_cache_update ) {
+			$updated = $this->fetch_and_cache_coins();
+			if ( is_wp_error( $updated ) ) {
+				return $updated;
+			}
+		}
 		$cached_data = $this->get_cache_object()->get( $this->get_coin_list_cache_key(), [] );
 		return is_array( $cached_data ) ? $cached_data : [];
 	}
 
 	/**
 	 * Fetches the list of supported coins from the API and caches it.
+	 *
+	 * @return bool|WP_Error True on success, or WP_Error on failure.
 	 */
-	public function fetch_and_cache_coins(): void {
+	public function fetch_and_cache_coins(): bool|WP_Error {
 		// Execute the fetching logic.
 		$raw_data = $this->fetch_coin_list();
+		if ( is_wp_error( $raw_data ) ) {
+			return $raw_data;
+		}
 
 		// Transform the raw data into our standard Entity objects.
 		$entities = $this->transform_coin_list_to_entities( $raw_data );
 
 		// Cache the entities.
-		$this->get_cache_object()->set( $this->get_coin_list_cache_key(), $entities );
+		return $this->get_cache_object()->set( $this->get_coin_list_cache_key(), $entities );
 	}
 
 	/**

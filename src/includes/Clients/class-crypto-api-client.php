@@ -11,6 +11,7 @@ namespace Multi_Crypto_Convert\Clients;
 
 use Multi_Crypto_Convert\Entities\Coin_Entity;
 use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
+use WP_Error;
 
 /**
  * Defines the contract for any class responsible for fetching external crypto
@@ -34,7 +35,8 @@ interface Crypto_API_Client {
 	 * list because there is not a scheduled update for coin lists.
 	 *
 	 * @param bool $force_cache_update Whether to force a cache update before.
-	 * @return Coin_Entity[] The list of supported coins.
+	 * @return Coin_Entity[]|WP_Error The list of supported coins or an error if
+	 * the cache needs to be updated and the request fails.
 	 */
-	public function get_available_coins( bool $force_cache_update = false ): array;
+	public function get_available_coins( bool $force_cache_update = false ): array|WP_Error;
 }
