@@ -15,6 +15,7 @@ import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 
 import { PanelBody } from '@wordpress/components';
 import { MultiSelectControl } from '@codeamp/block-components';
+import { useState, useEffect } from '@wordpress/element';
 
 /**
  * The edit function describes the structure of your block in the context of the
@@ -25,40 +26,57 @@ import { MultiSelectControl } from '@codeamp/block-components';
  * @return {Element} Element to render.
  */
 export default function Edit( { attributes, setAttributes } ) {
+	const [ coinsList, setCoinsList ] = useState( [] );
+	const [ isLoading, setIsLoading ] = useState( true );
+
 	const coins = attributes.coins && 0 < attributes.coins.length
-		? attributes.coins.split(',')
+		? attributes.coins.split( ',' )
 		: [];
-	const coinsList = [
-		{
-			value: 'abc',
-			label: 'ABC Coin',
-		},
-		{
-			value: 'def',
-			label: 'DEF Coin',
-		},
-		{
-			value: 'ghi',
-			label: 'GHI Coin',
-		},
-		{
-			value: 'jkl',
-			label: 'JKL Coin',
-		},
-	];
+
+	// Fetch selected coins from the admin settings via REST API.
+	useEffect( () => {
+		const fetchSelectedAvailableCoins = async () => {
+			try {
+				const response = await fetch( '/wp-json/mcc/v1/selected-available-coins' );
+				if ( ! response.ok ) {
+					throw new Error( 'Failed to fetch the selected available coins.' );
+				}
+				const data = await response.json();
+
+				if ( data.success && data.data ) {
+					setCoinsList( data.data );
+				} else {
+					setCoinsList( [] );
+				}
+			} catch ( error ) {
+				console.error( 'Error fetching the selected available coins:', error );
+				setCoinsList( [] );
+			} finally {
+				setIsLoading( false );
+			}
+		};
+
+		fetchSelectedAvailableCoins();
+	}, [] );
 
 	return (
 		<>
 			<InspectorControls>
 				<PanelBody title={ __( 'Coins', 'multi-crypto-convert' ) }>
-					<MultiSelectControl
-						__next40pxDefaultSize
-						label={ __( 'Select Coins', 'multi-crypto-convert' ) }
-						value={ coins }
-						options={ coinsList }
-						onChange={ ( selectedCoins ) => setAttributes( { coins: selectedCoins.join(',') } ) }
-						__nextHasNoMarginBottom={ true }
-					/>
+					{ isLoading ? (
+						<p>{ __( 'Loading coins...', 'multi-crypto-convert' ) }</p>
+					) : coinsList.length === 0 ? (
+						<p>{ __( 'No coins available. Please configure coins in the plugin settings.', 'multi-crypto-convert' ) }</p>
+					) : (
+						<MultiSelectControl
+							__next40pxDefaultSize
+							label={ __( 'Select Coins', 'multi-crypto-convert' ) }
+							value={ coins }
+							options={ coinsList }
+							onChange={ ( selectedCoins ) => setAttributes( { coins: selectedCoins.join( ',' ) } ) }
+							__nextHasNoMarginBottom={ true }
+						/>
+					) }
 				</PanelBody>
 			</InspectorControls>
 

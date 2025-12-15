@@ -17,6 +17,7 @@ namespace Multi_Crypto_Convert;
 use Multi_Crypto_Convert\Cache\Crypto_Option_Cache;
 use Multi_Crypto_Convert\Clients\Crypto_API_Client;
 use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
+use Multi_Crypto_Convert\Controllers\Price_Rest_Controller;
 use Multi_Crypto_Convert\Settings\Admin_Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -105,6 +106,9 @@ add_action(
 				10,
 				3
 			);
+
+			// Register the REST endpoints.
+			new Price_Rest_Controller( $admin_settings, $client );
 		}
 	}
 );

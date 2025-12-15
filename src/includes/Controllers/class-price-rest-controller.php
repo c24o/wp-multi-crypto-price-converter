@@ -10,6 +10,7 @@ declare( strict_types=1 );
 namespace Multi_Crypto_Convert\Controllers;
 
 use Multi_Crypto_Convert\Clients\Crypto_API_Client;
+use Multi_Crypto_Convert\Settings\Admin_Settings;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -22,7 +23,8 @@ use WP_REST_Response;
 final class Price_Rest_Controller {
 
 	private const API_NAMESPACE = 'mcc/v1';
-	private const ENDPOINT = 'prices';
+	private const ENDPOINT_PRICES = 'prices';
+	private const ENDPOINT_SELECTED_COINS = 'selected-available-coins';
 	private const NONCE_ACTION = 'mcc_prices_nonce';
 	private const RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds.
 	private const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per hour per IP.
@@ -30,21 +32,31 @@ final class Price_Rest_Controller {
 	/**
 	 * Constructor.
 	 *
+	 * @param Admin_Settings $settings Plugin settings.
 	 * @param Crypto_API_Client $client The cryptocurrency API client.
 	 */
 	public function __construct(
+		private Admin_Settings $settings,
 		private Crypto_API_Client $client
 	) {
-		add_action( 'rest_api_init', [ $this, 'register_routse' ] );
+		add_action( 'rest_api_init', [ $this, 'register_routes' ] );
 	}
 
 	/**
-	 * Registers the REST API route.
+	 * Registers the REST API routes.
 	 */
-	public function register_route(): void {
+	public function register_routes(): void {
+		$this->register_prices_route();
+		$this->register_selected_coins_route();
+	}
+
+	/**
+	 * Registers the prices REST API route.
+	 */
+	private function register_prices_route(): void {
 		register_rest_route(
 			self::API_NAMESPACE,
-			'/' . self::ENDPOINT,
+			'/' . self::ENDPOINT_PRICES,
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'get_prices' ],
@@ -65,6 +77,66 @@ final class Price_Rest_Controller {
 					],
 				],
 			]
+		);
+	}
+
+	/**
+	 * Registers the selected coins REST API route.
+	 *
+	 * This endpoint allows block editors to retrieve the list of coins
+	 * that administrators have selected in the settings.
+	 */
+	private function register_selected_coins_route(): void {
+		register_rest_route(
+			self::API_NAMESPACE,
+			'/' . self::ENDPOINT_SELECTED_COINS,
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'get_selected_coins' ],
+			]
+		);
+	}
+
+	/**
+	 * Callback for the GET /selected-coins endpoint.
+	 *
+	 * Returns the list of coin IDs selected by the administrator
+	 * in the plugin settings.
+	 *
+	 * @return WP_REST_Response The response containing selected coins data.
+	 */
+	public function get_selected_coins(): WP_REST_Response {
+		$selected_coins = [];
+		$selected_coins_ids = $this->settings->get_selected_coins_ids();
+		$available_coins = $this->client->get_available_coins();
+		if ( is_array( $selected_coins ) && is_array( $available_coins ) ) {
+			$selected_coins = array_values(
+				array_filter(
+					array_map(
+						function ( string $coin_id ) use ( $available_coins ) {
+							foreach ( $available_coins as $coin ) {
+								if ( $coin->api_id === $coin_id ) {
+									return [
+										'value' => $coin->symbol,
+										'label' => $coin->name,
+									];
+								}
+							}
+							return false;
+						},
+						$selected_coins_ids
+					)
+				)
+			);
+		}
+
+		return new WP_REST_Response(
+			[
+				'success' => true,
+				'data'    => $selected_coins,
+				'count'   => count( $selected_coins ),
+			],
+			200
 		);
 	}
 
