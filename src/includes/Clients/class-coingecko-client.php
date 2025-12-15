@@ -23,6 +23,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	private const PRICE_ENDPOIINT = 'simple/price';
 	private const COIN_LIST_ENDPOINT = 'coins/list';
 	private const DEFAULT_TIMEOUT_SECONDS = 10;
+	private const MAX_SYMBOLS_PER_REQUEST = 50;
 	public const API_KEY_FIELD = 'coingecko_api_key';
 	public const API_KEY_TYPE_FIELD = 'coingecko_api_key_type';
 	public const DEFAULT_API_KEY_TYPE = 'demo';
@@ -32,12 +33,12 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	 *
 	 * @param CacheInterface $cache The cache implementation.
 	 * @param array<string, mixed> $settings Admin settings values.
-	 * @param string[] $tracked_symbols List of tracked cryptocurrency symbols.
+	 * @param string[] $tracked_coins_ids List of tracked cryptocurrency symbols.
 	 */
 	public function __construct(
 		private CacheInterface $cache,
 		private array $settings = [],
-		private array $tracked_symbols = []
+		private array $tracked_coins_ids = []
 	) {
 		parent::__construct();
 	}
@@ -136,6 +137,22 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	}
 
 	/**
+	 * Check if the coins list should be updated when the settings are saved.
+	 *
+	 * @filter mcc_require_coins_list_update_after_settings_saving 10 2
+	 *
+	 * @param bool $require_update True if the coins list is going to be updated.
+	 * @param array $old_value Settings stored before the update.
+	 * @param array $new_value New settings to store.
+	 * @return bool True if the coins list should be updated, otherwise false.
+	 */
+	public function should_update_coins_list( bool $require_update, array $old_value, array $new_value ): bool {
+		$old_api_key = $old_value[ self::API_KEY_FIELD ] ?? '';
+		$new_api_key = $new_value[ self::API_KEY_FIELD ] ?? '';
+		return $require_update || $old_api_key !== $new_api_key;
+	}
+
+	/**
 	 * Get an slug identifying this API client.
 	 *
 	 * @return string The unique slug for this API client.
@@ -185,13 +202,19 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 		}
 
 		// Get the symbols to fetch from settings.
-		$symbols = $this->tracked_symbols;
+		$symbols = array_column(
+			array_filter(
+				$this->get_available_coins(),
+				fn( Coin_Entity $coin ) => in_array( $coin->api_id, $this->tracked_coins_ids, true )
+			),
+			'symbol'
+		);
 
 		// Only 50 symbols are allowed per request in CoinGecko API.
 		$prices = [];
-		$batches = ceil( count( $symbols ) / 50.0 );
+		$batches = ceil( count( $symbols ) / self::MAX_SYMBOLS_PER_REQUEST );
 		for ( $i = 0; $i < $batches; $i++ ) {
-			$symbols = array_slice( $symbols, $i * 50, 50 );
+			$symbols = array_slice( $symbols, $i * self::MAX_SYMBOLS_PER_REQUEST, self::MAX_SYMBOLS_PER_REQUEST );
 
 			// Build and execute the request.
 			$args = [
@@ -259,19 +282,13 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	public function transform_prices_to_entities( array $raw_data ): array {
 		$entities = [];
 
-		$coins = $this->get_available_coins();
-		foreach ( $raw_data as $id => $data ) {
-			$current_coin = array_find(
-				$coins,
-				function ( Coin_Entity $coin ) use ( $id ): bool {
-					return $coin->api_id === $id;
-				}
-			);
-			if ( null === $current_coin ) {
-				continue;
-			}
+		/**
+		 * When the request is done filtering by symbols, then the response
+		 * is index by symbols instead by ids.
+		 */
+		foreach ( $raw_data as $symbol => $data ) {
 			$entities[] = new Crypto_Price_Entity(
-				symbol       : $current_coin->symbol,
+				symbol       : $symbol,
 				price_usd    : (float) ( $data['usd'] ?? 0.0 ),
 				last_updated : $data['last_updated_at'] ?? time()
 			);

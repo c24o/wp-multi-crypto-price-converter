@@ -99,6 +99,12 @@ add_action(
 				10,
 				2
 			);
+			add_filter(
+				'mcc_require_coins_list_update_after_settings_saving',
+				[ $client, 'should_update_coins_list' ],
+				10,
+				3
+			);
 		}
 	}
 );

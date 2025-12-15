@@ -21,7 +21,6 @@ final class Admin_Settings {
 	public const SETTINGS_OPTION_NAME = 'mcc_general_settings';
 	public const OPTION_API_SOURCE = 'mcc_api_source';
 	public const OPTION_SELECTED_COINS = 'mcc_selected_coins';
-	private const REFRESH_COINS_ACTION = 'mcc_refresh_coins';
 	private const MAX_SELECTABLE_COINS = 50;
 
 	/**
@@ -35,29 +34,22 @@ final class Admin_Settings {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
 		add_action( 'admin_menu', [ $this, 'register_menu' ] );
 		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ] );
-		add_action( 'wp_ajax_' . self::REFRESH_COINS_ACTION, [ $this, 'handle_refresh_coins_ajax' ] );
+		add_action( 'update_option_' . self::SETTINGS_OPTION_NAME, [ $this, 'maybe_update_coins_list' ], 10, 2 );
 	}
 
 	/**
 	 * Retrieves the selected coins for use in blocks.
 	 *
-	 * @return string[] The list of selected coin symbols (lowercase).
+	 * @return string[] The list of selected coin ids.
 	 */
-	public function get_selected_coins(): array {
+	public function get_selected_coins_ids(): array {
 		$settings = $this->get_settings();
 		$selected = $settings[ self::OPTION_SELECTED_COINS ] ?? [];
 		if ( ! is_array( $selected ) ) {
 			return [];
 		}
 
-		return array_values(
-			array_filter(
-				$this->get_active_source_client()->get_available_coins(),
-				function ( $coin ) use ( $selected ) {
-					return in_array( $coin->api_id, $selected, true );
-				}
-			)
-		);
+		return $selected;
 	}
 
 	/**
@@ -80,17 +72,61 @@ final class Admin_Settings {
 	public function get_active_source_client(): Crypto_API_Client {
 		$settings = $this->get_settings();
 		$source = $settings[ self::OPTION_API_SOURCE ] ?? '';
-		return $this->factory->create( $source, $this->get_settings(), $this->get_tracked_crypto_symbols() );
+		return $this->factory->create( $source, $this->get_settings(), $this->get_selected_coins_ids() );
 	}
 
 	/**
-	 * Gets the list of cryptocurrency symbols used by existing converter
-	 * blocks.
+	 * Update the list of coins retrieved from the source.
 	 *
-	 * @return string[] The list of tracked cryptocurrency symbols.
+	 * @return bool True if the list is retrieved and saved, otherwise false.
 	 */
-	public function get_tracked_crypto_symbols(): array {
-		return [ 'btc', 'eth' ];
+	public function update_coins_list(): bool {
+		// Get the selected API source.
+		$source = $this->get_settings()[ self::OPTION_API_SOURCE ] ?? '';
+		if ( ! is_string( $source ) || empty( $source ) ) {
+			return false;
+		}
+
+		// Create client instance from factory.
+		$client = $this->get_active_source_client();
+		if ( ! $client instanceof Crypto_API_Client ) {
+			return false;
+		}
+
+		// Fetch and cache the coins list.
+		$coins = $client->get_available_coins( true );
+		return ! is_wp_error( $coins );
+	}
+
+	/**
+	 * Check if the coins list should be updated when the settings are saved.
+	 *
+	 * @filter update_option_mcc_general_settings 10 2
+	 *
+	 * @param array $old_value Settings stored before the update.
+	 * @param array $new_value New settings to store.
+	 */
+	public function maybe_update_coins_list( array $old_value, array $new_value ): void {
+		// Check if API source was changed.
+		$old_source = $old_value['mcc_api_source'] ?? '';
+		$new_source = $new_value['mcc_api_source'] ?? '';
+		$require_update = $old_source !== $new_source;
+
+		/**
+		 * Allow clients to set if the coins list needs to be updated.
+		 *
+		 * @param
+		 */
+		$require_update = apply_filters(
+			'mcc_require_coins_list_update_after_settings_saving',
+			$require_update,
+			$old_value,
+			$new_value
+		);
+
+		if ( $require_update ) {
+			$this->update_coins_list();
+		}
 	}
 
 	/**
@@ -221,7 +257,7 @@ final class Admin_Settings {
 		try {
 			$client = $this->get_active_source_client();
 			$available_coins = $client->get_available_coins();
-			$selected_coins_ids = array_column( $this->get_selected_coins(), 'api_id' );
+			$selected_coins_ids = $this->get_selected_coins_ids();
 
 			if ( empty( $available_coins ) ) {
 				echo '<p>' . esc_html__( 'No coins available. Please configure your API source and refresh the coin list.', 'multi-crypto-convert' ) . '</p>';
@@ -256,45 +292,6 @@ final class Admin_Settings {
 				);
 				?>
 			</p>
-			<script>
-				(function() {
-					const maxCoins = <?php echo (int) self::MAX_SELECTABLE_COINS; ?>;
-					const $select = jQuery( '.mcc-coins-select2' );
-
-					// Initialize Select2 with search functionality.
-					$select.select2( {
-						width: '100%',
-						search: {
-							matcher: function( params, data ) {
-								const searchTerm = params.term.toLowerCase();
-								if ( ! searchTerm ) {
-									return data;
-								}
-
-								const matchesName = data.text.toLowerCase().includes( searchTerm );
-								const matchesSymbol = jQuery( data.element ).data( 'symbol' ).includes( searchTerm );
-
-								if ( matchesName || matchesSymbol ) {
-									return data;
-								}
-
-								return null;
-							}
-						}
-					} );
-
-					// Enforce maximum coin limit on change.
-					$select.on( 'change', function() {
-						const selectedCount = jQuery( this ).val().length;
-						if ( selectedCount > maxCoins ) {
-							// Get the current value before the last change.
-							const currentValue = $select.val() || [];
-							// Revert to the first maxCoins selections.
-							$select.val( currentValue.slice( 0, maxCoins ) ).trigger( 'change' );
-						}
-					} );
-				})();
-			</script>
 			<?php
 		} catch ( \Exception $e ) {
 			echo '<p>' . esc_html__( 'Error loading coins. Please configure your API source first.', 'multi-crypto-convert' ) . '</p>';
@@ -331,15 +328,6 @@ final class Admin_Settings {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'multi-crypto-convert' ) );
 		}
 
-		try {
-			// Create client to get coin count.
-			$client = $this->get_active_source_client();
-			$coins = $client->get_available_coins();
-			$coin_count = count( $coins );
-		} catch ( \Exception $e ) {
-			$coin_count = 0;
-		}
-
 		// Add error/update messages.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only checking for settings-updated query var.
 		if ( isset( $_GET['settings-updated'] ) ) {
@@ -363,28 +351,6 @@ final class Admin_Settings {
 				<?php do_settings_sections( self::PAGE_SLUG ); ?>
 				<?php submit_button(); ?>
 			</form>
-
-			<hr />
-
-			<h2><?php esc_html_e( 'Coin Management', 'multi-crypto-convert' ); ?></h2>
-
-			<p>
-				<?php esc_html_e( 'Amount of coins found in the source:', 'multi-crypto-convert' ); ?>
-				<strong id="mcc-coin-count"><?php echo esc_html( $coin_count ); ?></strong>
-			</p>
-
-			<button
-				type="button"
-				id="mcc-refresh-coins-btn"
-				class="button button-primary"
-				data-nonce="<?php echo esc_attr( wp_create_nonce( self::REFRESH_COINS_ACTION ) ); ?>"
-			>
-				<?php esc_html_e( 'Refresh Coins List', 'multi-crypto-convert' ); ?>
-			</button>
-
-			<div id="mcc-refresh-status" style="margin-top: 20px; display: none;">
-				<p id="mcc-status-message"></p>
-			</div>
 		</div>
 		<?php
 	}
@@ -417,7 +383,7 @@ final class Admin_Settings {
 		wp_enqueue_script(
 			'mcc-admin-settings',
 			plugins_url( 'assets/js/admin-settings.js', MCC_PLUGIN_FILE ),
-			[],
+			[ 'jquery' ],
 			MCC_PLUGIN_VERSION,
 			true
 		);
@@ -426,83 +392,8 @@ final class Admin_Settings {
 			'mcc-admin-settings',
 			'mccSettings',
 			[
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'action'  => self::REFRESH_COINS_ACTION,
+				'maxCoins' => self::MAX_SELECTABLE_COINS,
 			]
 		);
-	}
-
-	/**
-	 * Handles the AJAX request to refresh the coins list.
-	 */
-	public function handle_refresh_coins_ajax(): void {
-		// Security check.
-		if (
-			! isset( $_POST['nonce'] )
-			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ) ), self::REFRESH_COINS_ACTION )
-		) {
-			wp_send_json_error(
-				[
-					'message' => __( 'Security check failed.', 'multi-crypto-convert' ),
-				]
-			);
-		}
-
-		// Permission check.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error(
-				[
-					'message' => __(
-						'You do not have sufficient permissions to perform this action.',
-						'multi-crypto-convert'
-					),
-				]
-			);
-		}
-
-		try {
-			// Get the selected API source.
-			$source = $this->get_settings()[ self::OPTION_API_SOURCE ] ?? '';
-			if ( ! is_string( $source ) || empty( $source ) ) {
-				wp_send_json_error(
-					[
-						'message' => __( 'API source is not configured.', 'multi-crypto-convert' ),
-					]
-				);
-			}
-
-			// Create client instance from factory.
-			$client = $this->get_active_source_client();
-
-			// Fetch and cache the coins list.
-			$coins = $client->get_available_coins( true );
-			if ( is_wp_error( $coins ) ) {
-				wp_send_json_error(
-					[
-						'message' => $coins->get_error_message(),
-					]
-				);
-			}
-
-			// Get the updated coin count.
-			$coin_count = count( $coins );
-
-			wp_send_json_success(
-				[
-					'message'    => __( 'Coins list refreshed successfully.', 'multi-crypto-convert' ),
-					'coin_count' => $coin_count,
-				]
-			);
-		} catch ( \Exception $e ) {
-			wp_send_json_error(
-				[
-					'message' => sprintf(
-						/* translators: %s is the error message */
-						__( 'Error refreshing coins list: %s', 'multi-crypto-convert' ),
-						$e->getMessage()
-					),
-				]
-			);
-		}
 	}
 }
