@@ -91,8 +91,9 @@ final class Price_Rest_Controller {
 			self::API_NAMESPACE,
 			'/' . self::ENDPOINT_SELECTED_COINS,
 			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'get_selected_coins' ],
+				'methods' => 'GET',
+				'callback' => [ $this, 'get_selected_coins' ],
+				'permission_callback' => '__return_true',
 			]
 		);
 	}

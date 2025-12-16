@@ -1,6 +1,6 @@
 /******/ (() => { // webpackBootstrap
 /*!**************************************!*\
-  !*** ./src/blocks/converter/view.js ***!
+  !*** ./src/blocks/converter/view.ts ***!
   \**************************************/
 /**
  * Frontend script for the Multi-Crypto Converter block.
@@ -25,7 +25,7 @@ const converterState = {
  * Fetch prices from the REST API endpoint
  *
  * @param {string} coinsParam - Comma-separated coin symbols (e.g., "BTC,ETH")
- * @return {Promise<Object>} Prices object keyed by coin symbol
+ * @return {Promise<PricesMap>} Prices object keyed by coin symbol
  */
 async function fetchPrices(coinsParam) {
   try {
@@ -64,7 +64,7 @@ function calculateConversion(usdAmount, price) {
   if (!usdAmount || !price || price === 0) {
     return '0.00000000';
   }
-  const amount = parseFloat(usdAmount);
+  const amount = parseFloat(String(usdAmount));
   if (isNaN(amount)) {
     return '0.00000000';
   }
@@ -193,7 +193,7 @@ function createAndInsertInputField(block) {
  * Update the converter table with current prices and conversions
  *
  * @param {HTMLElement} block - The converter block element
- * @param {Object} prices - Object with coin symbols as keys and prices as values
+ * @param {PricesMap} prices - Object with coin symbols as keys and prices as values
  */
 function updateConverterTable(block, prices) {
   const input = block.querySelector('[data-type="currency-input"]');
@@ -202,12 +202,12 @@ function updateConverterTable(block, prices) {
   // Update each row with price and conversion
   block.querySelectorAll('.mcc-converter-row').forEach(row => {
     const coin = row.getAttribute('data-coin');
-    const price = prices[coin];
+    const price = coin ? prices[coin] : undefined;
 
     // Update price cell
     const priceSpan = row.querySelector('[data-price]');
     if (priceSpan) {
-      priceSpan.textContent = formatPrice(price);
+      priceSpan.textContent = formatPrice(price || 0);
     }
 
     // Update conversion cell
@@ -259,7 +259,7 @@ function initConverterBlock(block) {
   if (converterState.updateInterval) {
     clearInterval(converterState.updateInterval);
   }
-  converterState.updateInterval = setInterval(() => {
+  converterState.updateInterval = window.setInterval(() => {
     fetchPrices(coinsParam).then(prices => {
       converterState.prices = prices;
       updateConverterTable(block, prices);
@@ -272,7 +272,7 @@ function initConverterBlock(block) {
       const value = e.target.value;
 
       // Allow empty, 0, and positive numbers
-      if (value === '' || value === '0' || parseFloat(value) > 0 && !isNaN(value)) {
+      if (value === '' || value === '0' || parseFloat(value) > 0 && !isNaN(parseFloat(value))) {
         updateConverterTable(block, converterState.prices);
       }
     });

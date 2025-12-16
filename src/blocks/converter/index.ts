@@ -28,12 +28,12 @@ import metadata from './block.json';
  */
 registerBlockType( metadata.name, {
 	/**
-	 * @see ./edit.js
+	 * @see ./edit.tsx
 	 */
 	edit: Edit,
 
 	/**
-	 * @see ./save.js
+	 * @see ./save.tsx
 	 */
-	save,
+	save
 } );

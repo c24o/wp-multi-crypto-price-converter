@@ -20,6 +20,7 @@
 
     <file>src</file>
     <file>multi-crypto-convert.php</file>
+    <exclude-pattern>build/*</exclude-pattern>
 
     <arg name="basepath" value="."/>
 </ruleset>

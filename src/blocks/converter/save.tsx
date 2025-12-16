@@ -1,5 +1,6 @@
 import { __ } from '@wordpress/i18n';
 import { useBlockProps } from '@wordpress/block-editor';
+import { ReactElement } from 'react';
 
 /**
  * The save function defines the way in which the different attributes should
@@ -8,10 +9,10 @@ import { useBlockProps } from '@wordpress/block-editor';
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#save
  *
- * @return {Element} Element to render.
+ * @return {ReactElement} Element to render.
  */
-export default function save() {
+export default function save(): ReactElement {
 	return (
-		<div { ...useBlockProps.save() }></div>
+		<div {...useBlockProps.save()}></div>
 	);
 }
