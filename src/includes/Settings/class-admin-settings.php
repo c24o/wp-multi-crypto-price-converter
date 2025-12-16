@@ -382,7 +382,7 @@ final class Admin_Settings {
 
 		wp_enqueue_script(
 			'mcc-admin-settings',
-			plugins_url( 'assets/js/admin-settings.js', MCC_PLUGIN_FILE ),
+			plugins_url( 'build/js/admin-settings.js', MCC_PLUGIN_FILE ),
 			[ 'jquery' ],
 			MCC_PLUGIN_VERSION,
 			true
