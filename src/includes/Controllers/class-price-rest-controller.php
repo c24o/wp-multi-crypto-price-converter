@@ -25,8 +25,6 @@ final class Price_Rest_Controller {
 	private const API_NAMESPACE = 'mcc/v1';
 	private const ENDPOINT_PRICES = 'prices';
 	private const ENDPOINT_SELECTED_COINS = 'selected-available-coins';
-	private const RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds.
-	private const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per hour per IP.
 
 	/**
 	 * Constructor.
@@ -59,7 +57,7 @@ final class Price_Rest_Controller {
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'get_prices' ],
-				'permission_callback' => [ $this, 'check_permissions' ],
+				'permission_callback' => '__return_true',
 				'args'                => [
 					'coins' => [
 						'description'       => __( 'Comma-separated list of coin symbols (e.g., BTC,ETH,ADA)', 'multi-crypto-convert' ),
@@ -181,27 +179,6 @@ final class Price_Rest_Controller {
 	}
 
 	/**
-	 * Permission callback for the prices endpoint.
-	 *
-	 * Performs security checks including:
-	 * - Rate limiting (DoS protection)
-	 *
-	 * @return bool|WP_Error True if allowed, WP_Error otherwise.
-	 */
-	public function check_permissions() {
-		// Check rate limiting.
-		if ( ! $this->check_rate_limit() ) {
-			return new \WP_Error(
-				'rate_limit_exceeded',
-				__( 'Too many requests. Please try again later.', 'multi-crypto-convert' ),
-				[ 'status' => 429 ]
-			);
-		}
-
-		return true;
-	}
-
-	/**
 	 * Sanitizes the coins query parameter.
 	 *
 	 * Accepts comma-separated coin symbols and returns them as a normalized string.
@@ -248,56 +225,5 @@ final class Price_Rest_Controller {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Checks if the request is within rate limits.
-	 *
-	 * Uses transients to track requests per IP address.
-	 *
-	 * @return bool True if within limits, false if exceeded.
-	 */
-	private function check_rate_limit(): bool {
-		$ip = $this->get_client_ip();
-		$transient_key = 'mcc_price_api_' . md5( $ip );
-
-		// Get current request count for this IP.
-		$request_count = (int) get_transient( $transient_key );
-
-		// Increment and check against limit.
-		if ( $request_count >= self::RATE_LIMIT_MAX_REQUESTS ) {
-			return false;
-		}
-
-		// Increment counter and set/update transient.
-		set_transient(
-			$transient_key,
-			$request_count + 1,
-			self::RATE_LIMIT_WINDOW
-		);
-
-		return true;
-	}
-
-	/**
-	 * Retrieves the client's IP address.
-	 *
-	 * Attempts to get the real client IP, accounting for proxies and CDNs.
-	 *
-	 * @return string The client IP address.
-	 */
-	private function get_client_ip(): string {
-		// Check for shared internet.
-		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
-		} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			// Handle multiple IPs from proxies.
-			$ips = explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) );
-			$ip = trim( $ips[0] );
-		} else {
-			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0' ) );
-		}
-
-		return $ip;
 	}
 }
