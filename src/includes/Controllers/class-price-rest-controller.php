@@ -18,14 +18,13 @@ use WP_REST_Response;
  * REST API controller for cryptocurrency price data.
  *
  * Provides a public REST endpoint for retrieving current cryptocurrency prices.
- * Security is implemented via rate limiting, nonce verification, and input validation.
+ * Security is implemented via rate limiting and input validation.
  */
 final class Price_Rest_Controller {
 
 	private const API_NAMESPACE = 'mcc/v1';
 	private const ENDPOINT_PRICES = 'prices';
 	private const ENDPOINT_SELECTED_COINS = 'selected-available-coins';
-	private const NONCE_ACTION = 'mcc_prices_nonce';
 	private const RATE_LIMIT_WINDOW = 3600; // 1 hour in seconds.
 	private const RATE_LIMIT_MAX_REQUESTS = 100; // Max requests per hour per IP.
 
@@ -68,12 +67,6 @@ final class Price_Rest_Controller {
 						'required'          => false,
 						'sanitize_callback' => [ $this, 'sanitize_coins_param' ],
 						'validate_callback' => [ $this, 'validate_coins_param' ],
-					],
-					'nonce' => [
-						'description'       => __( 'WordPress nonce for CSRF protection', 'multi-crypto-convert' ),
-						'type'              => 'string',
-						'required'          => true,
-						'sanitize_callback' => 'sanitize_text_field',
 					],
 				],
 			]
@@ -191,23 +184,11 @@ final class Price_Rest_Controller {
 	 * Permission callback for the prices endpoint.
 	 *
 	 * Performs security checks including:
-	 * - Nonce verification (CSRF protection)
 	 * - Rate limiting (DoS protection)
 	 *
-	 * @param WP_REST_Request $request The REST request object.
 	 * @return bool|WP_Error True if allowed, WP_Error otherwise.
 	 */
-	public function check_permissions( WP_REST_Request $request ) {
-		// Check nonce for CSRF protection.
-		$nonce = $request->get_param( 'nonce' );
-		if ( ! $nonce || ! wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
-			return new \WP_Error(
-				'invalid_nonce',
-				__( 'Security check failed. Invalid or missing nonce.', 'multi-crypto-convert' ),
-				[ 'status' => 403 ]
-			);
-		}
-
+	public function check_permissions() {
 		// Check rate limiting.
 		if ( ! $this->check_rate_limit() ) {
 			return new \WP_Error(

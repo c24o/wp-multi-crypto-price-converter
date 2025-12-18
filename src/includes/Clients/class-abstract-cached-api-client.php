@@ -21,6 +21,7 @@ use WP_Error;
 abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 
 	protected const CRON_HOOK = 'mcc_fetch_prices_cron';
+	protected const CRON_INTERVAL = 'mcc_interval';
 	protected const PRICE_CACHE_KEY = 'prices';
 	protected const COIN_LIST_CACHE_KEY = 'coin_list';
 
@@ -32,6 +33,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	public function __construct() {
 		add_action( 'init', [ $this, 'update_prices_schedule' ] );
 		add_action( $this->get_cron_hook(), [ $this, 'fetch_and_cache_prices' ] );
+		add_action( 'cron_schedules', [ $this, 'add_custom_cron_interval' ] );
 	}
 
 	/**
@@ -53,12 +55,21 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	}
 
 	/**
-	 * Returns the unique cron hook name for this client's scheduled tasks.
+	 * Returns the unique cron hook slug for this client's scheduled tasks.
 	 *
-	 * @return string The cron hook name.
+	 * @return string The cron hook slug.
 	 */
 	protected function get_cron_hook(): string {
 		return sprintf( '%s_%s', self::CRON_HOOK, $this->get_api_client_slug() );
+	}
+
+	/**
+	 * Returns the unique cron interval slug for this client's scheduled tasks.
+	 *
+	 * @return string The cron inverval slug.
+	 */
+	protected function get_cron_interval(): string {
+		return sprintf( '%s_%s', self::CRON_INTERVAL, $this->get_api_client_slug() );
 	}
 
 	/**
@@ -96,7 +107,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 */
 	public function update_prices_schedule(): void {
 		if ( ! wp_next_scheduled( $this->get_cron_hook() ) ) {
-			wp_schedule_event( time(), 'mcc_interval', $this->get_cron_hook() );
+			wp_schedule_event( time(), $this->get_cron_interval(), $this->get_cron_hook() );
 		}
 	}
 
@@ -122,6 +133,8 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	/**
 	 * Hooks into WordPress to add a custom 15-minute cron interval.
 	 *
+	 * @filter cron_schedules 10 1
+	 *
 	 * @param array $schedules Existing cron schedules.
 	 * @return array Modified cron schedules.
 	 */
@@ -129,7 +142,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 		// Get interval data from the concrete client.
 		$interval_data = $this->get_prices_update_interval_data();
 
-		$schedules[ 'mcc_interval_' . $this->get_api_client_slug() ] = [
+		$schedules[ $this->get_cron_interval() ] = [
 			'interval' => $interval_data['interval'],
 			'display'  => $interval_data['display'],
 		];
