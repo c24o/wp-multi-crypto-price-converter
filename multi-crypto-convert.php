@@ -14,6 +14,7 @@ declare( strict_types=1 );
 
 namespace Multi_Crypto_Convert;
 
+use League\Container\Container;
 use Multi_Crypto_Convert\Cache\Crypto_Option_Cache;
 use Multi_Crypto_Convert\Clients\Crypto_API_Client;
 use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
@@ -78,37 +79,32 @@ function register_plugin_blocks() {
 }
 add_action( 'init', __NAMESPACE__ . '\register_plugin_blocks' );
 
+/**
+ * Get the container for the plugin.
+ */
+function get_container() {
+	global $mcc_container;
+	if ( ! $mcc_container ) {
+		$mcc_container = new Container();
+	}
+	return $mcc_container;
+}
+
 add_action(
 	'plugins_loaded',
 	function () {
-		$cache = new Crypto_Option_Cache();
-		$factory = new Crypto_Client_Factory( $cache );
-		$admin_settings = new Admin_Settings( $factory );
+		$container = get_container();
+		$container->add( Crypto_Option_Cache::class );
+		$container->add( Crypto_Client_Factory::class )->addArgument( Crypto_Option_Cache::class );
+		$container->addShared( Admin_Settings::class )->addArgument( Crypto_Client_Factory::class );
 
 		// Register API client settings for the source selected.
-		$client = $admin_settings->get_active_source_client();
+		$client = $container->get( Admin_Settings::class )->get_active_source_client();
 		if ( $client instanceof Crypto_API_Client ) {
-			add_action(
-				'mcc_register_client_settings_fields',
-				[ $client, 'register_settings_fields' ],
-				10,
-				2
-			);
-			add_filter(
-				'mcc_sanitize_client_settings',
-				[ $client, 'sanitize_settings_fields' ],
-				10,
-				2
-			);
-			add_filter(
-				'mcc_require_coins_list_update_after_settings_saving',
-				[ $client, 'should_update_coins_list' ],
-				10,
-				3
-			);
+			$client->register_hooks();
 
 			// Register the REST endpoints.
-			new Price_Rest_Controller( $admin_settings, $client );
+			new Price_Rest_Controller( $container->get( Admin_Settings::class ), $client );
 		}
 	}
 );

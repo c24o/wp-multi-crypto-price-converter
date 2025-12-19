@@ -15,12 +15,19 @@ function initializeBlocks() {
 	const blockWrappers = document.querySelectorAll<HTMLElement>( '.wp-block-multi-crypto-convert-converter' );
 	blockWrappers.forEach( ( div ) => {
 		const coinsString = div.dataset.coins;
-		if ( coinsString ) {
-			const coins = coinsString.split( ',' ).map( ( coin ) => coin.trim() ).filter( Boolean );
-			if ( coins.length > 0 ) {
-				const root = createRoot( div );
-				root.render( <FrontendConverter coins={ coins } /> );
-			}
+		if ( ! coinsString ) {
+			return;
+		}
+
+		const coins = coinsString.split( ',' ).map( ( coin ) => coin.trim() ).filter( Boolean );
+		if ( 0 === coins.length ) {
+			return;
+		}
+
+		const container = div.querySelector( '.mcc-converter-container' );
+		if ( container ) {
+			const root = createRoot( container );
+			root.render( <FrontendConverter coins={ coins } /> );
 		}
 	} );
 }

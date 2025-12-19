@@ -20,6 +20,13 @@ use WP_Error;
 interface Crypto_API_Client {
 
 	/**
+	 * Register the object methods to different WP hooks.
+	 *
+	 * This method is fired before the init hook if the client is setup.
+	 */
+	public function register_hooks(): void;
+
+	/**
 	 * Retrieves the cached price entities.
 	 *
 	 * @param string[]|null $coins Optional list of coin symbols to filter
@@ -39,4 +46,16 @@ interface Crypto_API_Client {
 	 * the cache needs to be updated and the request fails.
 	 */
 	public function get_available_coins( bool $force_cache_update = false ): array|WP_Error;
+
+	/**
+	 * Some API services might require attribution for usage.
+	 *
+	 * @return bool True if attribution is required, otherwise false.
+	 */
+	public function is_attribution_required(): bool;
+
+	/**
+	 * Render the attribution for usage of the API.
+	 */
+	public function render_attribution_content(): void;
 }

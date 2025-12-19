@@ -173,7 +173,7 @@ function FrontendConverter({
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
             scope: "col",
             className: "mcc-converter-th-coin",
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Cryptocurrency', 'multi-crypto-convert')
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Coin', 'multi-crypto-convert')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
             scope: "col",
             className: "mcc-converter-th-price",
@@ -181,7 +181,7 @@ function FrontendConverter({
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
             scope: "col",
             className: "mcc-converter-th-amount",
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Converted Amount', 'multi-crypto-convert')
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Amount', 'multi-crypto-convert')
           })]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
           className: `mcc-converter-row${'usd' === baseCoin ? ' mcc-row-active' : ''}`,
@@ -394,14 +394,19 @@ function initializeBlocks() {
   const blockWrappers = document.querySelectorAll('.wp-block-multi-crypto-convert-converter');
   blockWrappers.forEach(div => {
     const coinsString = div.dataset.coins;
-    if (coinsString) {
-      const coins = coinsString.split(',').map(coin => coin.trim()).filter(Boolean);
-      if (coins.length > 0) {
-        const root = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createRoot)(div);
-        root.render(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_FrontendConverter__WEBPACK_IMPORTED_MODULE_1__["default"], {
-          coins: coins
-        }));
-      }
+    if (!coinsString) {
+      return;
+    }
+    const coins = coinsString.split(',').map(coin => coin.trim()).filter(Boolean);
+    if (0 === coins.length) {
+      return;
+    }
+    const container = div.querySelector('.mcc-converter-container');
+    if (container) {
+      const root = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createRoot)(container);
+      root.render(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_FrontendConverter__WEBPACK_IMPORTED_MODULE_1__["default"], {
+        coins: coins
+      }));
     }
   });
 }

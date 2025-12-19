@@ -44,6 +44,32 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	}
 
 	/**
+	 * Register the object methods to different WP hooks.
+	 *
+	 * This method should be used before the hooks are fired.
+	 */
+	public function register_hooks(): void {
+		add_action(
+			'mcc_register_client_settings_fields',
+			[ $this, 'register_settings_fields' ],
+			10,
+			2
+		);
+		add_filter(
+			'mcc_sanitize_client_settings',
+			[ $this, 'sanitize_settings_fields' ],
+			10,
+			2
+		);
+		add_filter(
+			'mcc_require_coins_list_update_after_settings_saving',
+			[ $this, 'should_update_coins_list' ],
+			10,
+			3
+		);
+	}
+
+	/**
 	 * Register the settings fields used to connect to the Coingecko API.
 	 *
 	 * Register the API key field and the type of API key field.
@@ -382,5 +408,23 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 			}
 		}
 		return $entities;
+	}
+
+	/**
+	 * Some API services might require attribution for usage.
+	 *
+	 * @return bool True if attribution is required, otherwise false.
+	 */
+	public function is_attribution_required(): bool {
+		return self::DEFAULT_API_KEY_TYPE === $this->settings[ self::API_KEY_TYPE_FIELD ];
+	}
+
+	/**
+	 * Render the attribution for usage of the API.
+	 */
+	public function render_attribution_content(): void {
+		?>
+		<p>Data provided by <a href="https://www.coingecko.com/" target="_blank" rel="noopener noreferrer">CoinGecko</a></p>
+		<?php
 	}
 }

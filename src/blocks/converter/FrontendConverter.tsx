@@ -159,9 +159,9 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 			<table>
 				<thead>
 					<tr>
-						<th scope="col" className="mcc-converter-th-coin">{ __( 'Cryptocurrency', 'multi-crypto-convert' ) }</th>
+						<th scope="col" className="mcc-converter-th-coin">{ __( 'Coin', 'multi-crypto-convert' ) }</th>
 						<th scope="col" className="mcc-converter-th-price">{ __( 'Price (USD)', 'multi-crypto-convert' ) }</th>
-						<th scope="col" className="mcc-converter-th-amount">{ __( 'Converted Amount', 'multi-crypto-convert' ) }</th>
+						<th scope="col" className="mcc-converter-th-amount">{ __( 'Amount', 'multi-crypto-convert' ) }</th>
 					</tr>
 					<tr
 						className={ `mcc-converter-row${ 'usd' === baseCoin ? ' mcc-row-active' : '' }` }
