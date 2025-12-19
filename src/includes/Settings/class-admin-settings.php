@@ -13,7 +13,7 @@ use Multi_Crypto_Convert\Clients\Crypto_API_Client;
 use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
 
 /**
- * Manages the admin settings page for the Multi-Crypto Convert plugin.
+ * Manages the admin settings page for the Multi Crypto Price Converter plugin.
  */
 final class Admin_Settings {
 
@@ -315,8 +315,8 @@ final class Admin_Settings {
 	 */
 	public function register_menu(): void {
 		add_menu_page(
-			__( 'Multi-Crypto Convert Settings', 'multi-crypto-convert' ),
-			__( 'Multi-Crypto Convert', 'multi-crypto-convert' ),
+			__( 'Multi Crypto Price Converter Settings', 'multi-crypto-convert' ),
+			__( 'Multi Crypto Price Converter', 'multi-crypto-convert' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render_settings_page' ],
@@ -349,7 +349,7 @@ final class Admin_Settings {
 
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Multi-Crypto Convert Settings', 'multi-crypto-convert' ); ?></h1>
+			<h1><?php esc_html_e( 'Multi Crypto Price Converter Settings', 'multi-crypto-convert' ); ?></h1>
 
 			<form method="post" action="options.php">
 				<?php settings_fields( self::PAGE_SLUG ); ?>

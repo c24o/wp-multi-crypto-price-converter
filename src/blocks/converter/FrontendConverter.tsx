@@ -1,5 +1,5 @@
 /**
- * React component for the frontend view of the Multi-Crypto Converter block.
+ * React component for the frontend view of the Multi Crypto Price Converter block.
  */
 import { ReactElement, useEffect, useState } from 'react';
 import { __ } from '@wordpress/i18n';
