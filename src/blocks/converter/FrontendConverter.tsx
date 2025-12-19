@@ -18,11 +18,12 @@ const UPDATE_INTERVAL_MS = 60000;
  * Fetch prices from the REST API endpoint.
  *
  * @param {string} coinsParam - Comma-separated coin symbols.
+ * @param {AbortSignal} [signal] - Optional abort signal for the fetch request.
  * @return {Promise<PricesMap>} A map of coin symbols to their prices in USD.
  */
-async function fetchPrices( coinsParam: string ): Promise<PricesMap> {
+async function fetchPrices( coinsParam: string, signal?: AbortSignal ): Promise<PricesMap> {
 	try {
-		const response = await fetch( `/wp-json/mcc/v1/prices?coins=${ coinsParam }` );
+		const response = await fetch( `/wp-json/mcc/v1/prices?coins=${ coinsParam }`, { signal } );
 		if ( ! response.ok ) {
 			throw new Error( `HTTP error! status: ${ response.status }` );
 		}
@@ -36,33 +37,25 @@ async function fetchPrices( coinsParam: string ): Promise<PricesMap> {
 		}
 		throw new Error( data.message || 'Invalid API response' );
 	} catch ( error ) {
+		if ( error instanceof Error && error.name === 'AbortError' ) {
+			throw error;
+		}
 		console.error( 'Failed to fetch prices:', error );
 		return {};
 	}
 }
 
 /**
- * Calculate the converted amount.
- *
- * @param {number} usdAmount - The amount in USD.
- * @param {number} price - The price of the cryptocurrency.
- * @return {number} The converted amount, formatted to 8 decimal places.
- */
-function calculateConversion( usdAmount: number, price: number ): number {
-	if ( ! usdAmount || ! price || price === 0 ) {
-		return 0;
-	}
-	return usdAmount / price;
-}
-
-/**
  * Format the converted amount to display it.
  *
+ * @param {string} coin - The coin to display.
  * @param {number} amount - The amount to format.
  * @return {string} The amount formatted to 8 decimal places.
  */
-function formatConvertedAmount( amount: number ): string {
-	return amount ? amount.toFixed( 8 ) : '';
+function formatConvertedAmount( coin: string, amount: number ): string {
+	if ( ! amount || ! coin ) return '';
+	if ( 'usd' === coin ) return amount.toFixed( 2 );
+	return amount.toFixed( 8 );
 }
 
 /**
@@ -85,70 +78,65 @@ function formatPrice( price: number ): string {
 
 export default function FrontendConverter( { coins }: FrontendConverterProps ): ReactElement {
 	const [ prices, setPrices ] = useState<PricesMap>( {} );
-	const [ amounts, setAmounts ] = useState<PricesMap>( { 'usd': 1 } );
-	const [ lastBaseCoin, setLastBaseCoin ] = useState<string>( 'usd' );
+	const [ baseCoin, setBaseCoin ] = useState<string>( 'usd' );
+	const [ baseAmount, setBaseAmount ] = useState<number | ''>( 1 );
 	const [ isLoading, setIsLoading ] = useState<boolean>( true );
+	const [ error, setError ] = useState<boolean>( false );
 
 	useEffect( () => {
+		const controller = new AbortController();
 		const coinsParam = coins.join( ',' );
+		let timeoutId: ReturnType<typeof setTimeout>;
 
 		const updatePrices = async () => {
-			const fetchedPrices = await fetchPrices( coinsParam );
-			setPrices( fetchedPrices );
-			setIsLoading( false );
+			try {
+				const fetchedPrices = await fetchPrices( coinsParam, controller.signal );
+				// Only update if we have data, otherwise keep old prices or show error
+				if ( Object.keys( fetchedPrices ).length > 0 ) {
+					setPrices( fetchedPrices );
+					setError( false );
+				} else {
+					setError( true );
+				}
+			} catch ( err ) {
+				// Ignore abort errors
+				if ( err instanceof Error && err.name !== 'AbortError' ) {
+					setError( true );
+				}
+			} finally {
+				if ( ! controller.signal.aborted ) {
+					setIsLoading( false );
+					// Schedule the next update only after the current one finishes (Recursive Polling)
+					timeoutId = setTimeout( updatePrices, UPDATE_INTERVAL_MS );
+				}
+			}
 		};
 
-		// Fetch prices immediately and then set an interval.
+		// Start the polling loop.
 		updatePrices();
-		const intervalId = setInterval( updatePrices, UPDATE_INTERVAL_MS );
 
-		// Cleanup interval on component unmount.
-		return () => clearInterval( intervalId );
+		// Cleanup timeout and abort fetch on component unmount/update.
+		return () => {
+			clearTimeout( timeoutId );
+			controller.abort();
+		};
 	}, [ coins ] );
 
-	// Recalculate conversions when prices are updated.
-	useEffect( () => {
-		convertCoinsAmounts( lastBaseCoin, amounts[ lastBaseCoin ] );
-	}, [ prices ] );
-
 	/**
-	 * Convert the amounts of the coins to the equivalent amount of the base
-	 * coin used.
+	 * Calculates the display value for a specific coin based on the current base coin.
 	 *
-	 * @param {string} baseCoin - The coin to use as a base.
-	 * @param {number} amountOverride - The new amount for the base coin.
+	 * @param {string} targetCoin - The coin to calculate for.
+	 * @return {string | number} The calculated amount or the raw input if it's the base.
 	 */
-	const convertCoinsAmounts = ( baseCoin: string, amountOverride: number ) => {
-		setLastBaseCoin( baseCoin );
-		const newAmounts = { ...amounts };
-		newAmounts[ baseCoin ] = amountOverride;
+	const getDisplayAmount = ( targetCoin: string ): string | number => {
+		if ( baseAmount === '' || baseAmount === 0 ) return '';
+		if ( targetCoin === baseCoin ) return baseAmount;
+		if ( 'usd' !== baseCoin && ! prices[ baseCoin ] ) return '';
+		if ( 'usd' !== targetCoin && ! prices[ targetCoin ] ) return '';
 
-		// Convert the current amount to USD.
-		const usdAmount = 'usd' !== baseCoin ? amountOverride * prices[ baseCoin ] : amountOverride;
-		if ( 'usd' !== baseCoin ) {
-			newAmounts.usd = usdAmount;
-		}
-
-		// Convert all the other coins.
-		for ( const [ targetCoin, targetPrice ] of Object.entries( prices ) ) {
-			if ( baseCoin !== targetCoin ) {
-				newAmounts[ targetCoin ] = calculateConversion( usdAmount, targetPrice );
-			}
-		}
-		setAmounts( newAmounts );
-	};
-
-	/**
-	 * Handler of the coin amounts changes.
-	 *
-	 * @param e - The input changed.
-	 * @param coin - The coin being changed.
-	 */
-	const handleAmountChange = ( e: React.ChangeEvent<HTMLInputElement>, coin: string ) => {
-		const value = e.target.value;
-		// Allow empty input to be treated as 0, otherwise parse as float.
-		const newAmount = value === '' ? 0 : parseFloat( value );
-		convertCoinsAmounts( coin, newAmount );
+		const usdValue = 'usd' === baseCoin ? baseAmount : baseAmount * prices[ baseCoin ];
+		const targetValue = 'usd' === targetCoin ? usdValue : usdValue / prices[ targetCoin ];
+		return formatConvertedAmount( targetCoin, targetValue );
 	};
 
 	/**
@@ -157,7 +145,7 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 	 * @param {React.MouseEvent<HTMLTableRowElement>} e - The click event.
 	 */
 	const handleRowClick = ( e: React.MouseEvent<HTMLTableRowElement> ) => {
-		if ( ( e.target as HTMLElement ).tagName === 'INPUT' ) {
+		if ( 'INPUT' === ( e.target as HTMLElement ).tagName ) {
 			return;
 		}
 		const input = e.currentTarget.querySelector( 'input' );
@@ -171,27 +159,31 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 			<table>
 				<thead>
 					<tr>
-						<th className="mcc-converter-th-coin">{ __( 'Cryptocurrency', 'multi-crypto-convert' ) }</th>
-						<th className="mcc-converter-th-price">{ __( 'Price (USD)', 'multi-crypto-convert' ) }</th>
-						<th className="mcc-converter-th-amount">{ __( 'Converted Amount', 'multi-crypto-convert' ) }</th>
+						<th scope="col" className="mcc-converter-th-coin">{ __( 'Cryptocurrency', 'multi-crypto-convert' ) }</th>
+						<th scope="col" className="mcc-converter-th-price">{ __( 'Price (USD)', 'multi-crypto-convert' ) }</th>
+						<th scope="col" className="mcc-converter-th-amount">{ __( 'Converted Amount', 'multi-crypto-convert' ) }</th>
 					</tr>
 					<tr
-						className={ `mcc-converter-row${ 'usd' === lastBaseCoin ? ' mcc-row-active' : '' }` }
+						className={ `mcc-converter-row${ 'usd' === baseCoin ? ' mcc-row-active' : '' }` }
 						onClick={ handleRowClick }
 					>
 						<td>
 							{ __( 'USD', 'multi-crypto-convert' ) }
 						</td>
 						<td>
-							{ formatPrice( 1 ) }
+							{ formatPrice( 1.0 ) /* USD is always 1 USD */ }
 						</td>
 						<td>
 							<input
 								id="mcc-usd-amount"
 								type="number"
 								className="mcc-amount-input"
-								value={ 'usd' === lastBaseCoin ? amounts.usd : amounts.usd.toFixed( 2 ) }
-								onChange={ ( e ) => handleAmountChange( e, 'usd' ) }
+								aria-label={ __( 'Amount in USD', 'multi-crypto-convert' ) }
+								value={ getDisplayAmount( 'usd' ) }
+								onChange={ ( e ) => {
+									setBaseCoin( 'usd' );
+									setBaseAmount( e.target.value === '' ? '' : parseFloat( e.target.value ) );
+								} }
 								placeholder="1.00"
 								step="0.01"
 								min="0"
@@ -204,15 +196,20 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 						<tr>
 							<td colSpan={ 3 }>{ __( 'Loading prices...', 'multi-crypto-convert' ) }</td>
 						</tr>
+					) : error ? (
+						<tr>
+							<td colSpan={ 3 } className="mcc-error">{ __( 'Error loading prices.', 'multi-crypto-convert' ) }</td>
+						</tr>
 					) : (
 						coins.map( ( coin ) => {
 							const price = prices[ coin ];
-							const isCurrentCoin = coin === lastBaseCoin;
+							const isCurrentCoin = coin === baseCoin;
+							const inputId = `mcc-amount-${ coin }`;
 							return (
 								<tr
 									key={ coin }
 									data-coin={ coin }
-									className={ isCurrentCoin ? 'mcc-row-active' : '' }
+									className={ isCurrentCoin ? 'mcc-row-active mcc-converter-row' : 'mcc-converter-row' }
 									onClick={ handleRowClick }
 								>
 									<td>
@@ -223,10 +220,15 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 									</td>
 									<td>
 										<input
+											id={ inputId }
 											type="number"
+											aria-label={ `Amount in ${ coin.toUpperCase() }` }
 											className="mcc-amount-input"
-											value={ isCurrentCoin ? amounts[ coin ] : formatConvertedAmount( amounts[ coin ] ) }
-											onChange={ ( e ) => handleAmountChange( e, coin ) }
+											value={ getDisplayAmount( coin ) }
+											onChange={ ( e ) => {
+												setBaseCoin( coin );
+												setBaseAmount( e.target.value === '' ? '' : parseFloat( e.target.value ) );
+											} }
 											placeholder="-"
 											step="0.00000001"
 											min="0"

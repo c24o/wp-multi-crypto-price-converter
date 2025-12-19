@@ -30,11 +30,14 @@ const UPDATE_INTERVAL_MS = 60000;
  * Fetch prices from the REST API endpoint.
  *
  * @param {string} coinsParam - Comma-separated coin symbols.
+ * @param {AbortSignal} [signal] - Optional abort signal for the fetch request.
  * @return {Promise<PricesMap>} A map of coin symbols to their prices in USD.
  */
-async function fetchPrices(coinsParam) {
+async function fetchPrices(coinsParam, signal) {
   try {
-    const response = await fetch(`/wp-json/mcc/v1/prices?coins=${coinsParam}`);
+    const response = await fetch(`/wp-json/mcc/v1/prices?coins=${coinsParam}`, {
+      signal
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -48,33 +51,25 @@ async function fetchPrices(coinsParam) {
     }
     throw new Error(data.message || 'Invalid API response');
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
     console.error('Failed to fetch prices:', error);
     return {};
   }
 }
 
 /**
- * Calculate the converted amount.
- *
- * @param {number} usdAmount - The amount in USD.
- * @param {number} price - The price of the cryptocurrency.
- * @return {number} The converted amount, formatted to 8 decimal places.
- */
-function calculateConversion(usdAmount, price) {
-  if (!usdAmount || !price || price === 0) {
-    return 0;
-  }
-  return usdAmount / price;
-}
-
-/**
  * Format the converted amount to display it.
  *
+ * @param {string} coin - The coin to display.
  * @param {number} amount - The amount to format.
  * @return {string} The amount formatted to 8 decimal places.
  */
-function formatConvertedAmount(amount) {
-  return amount ? amount.toFixed(8) : '';
+function formatConvertedAmount(coin, amount) {
+  if (!amount || !coin) return '';
+  if ('usd' === coin) return amount.toFixed(2);
+  return amount.toFixed(8);
 }
 
 /**
@@ -98,72 +93,62 @@ function FrontendConverter({
   coins
 }) {
   const [prices, setPrices] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({});
-  const [amounts, setAmounts] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
-    'usd': 1
-  });
-  const [lastBaseCoin, setLastBaseCoin] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)('usd');
+  const [baseCoin, setBaseCoin] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)('usd');
+  const [baseAmount, setBaseAmount] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(1);
   const [isLoading, setIsLoading] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true);
+  const [error, setError] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(false);
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
+    const controller = new AbortController();
     const coinsParam = coins.join(',');
+    let timeoutId;
     const updatePrices = async () => {
-      const fetchedPrices = await fetchPrices(coinsParam);
-      setPrices(fetchedPrices);
-      setIsLoading(false);
+      try {
+        const fetchedPrices = await fetchPrices(coinsParam, controller.signal);
+        // Only update if we have data, otherwise keep old prices or show error
+        if (Object.keys(fetchedPrices).length > 0) {
+          setPrices(fetchedPrices);
+          setError(false);
+        } else {
+          setError(true);
+        }
+      } catch (err) {
+        // Ignore abort errors
+        if (err instanceof Error && err.name !== 'AbortError') {
+          setError(true);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+          // Schedule the next update only after the current one finishes (Recursive Polling)
+          timeoutId = setTimeout(updatePrices, UPDATE_INTERVAL_MS);
+        }
+      }
     };
 
-    // Fetch prices immediately and then set an interval.
+    // Start the polling loop.
     updatePrices();
-    const intervalId = setInterval(updatePrices, UPDATE_INTERVAL_MS);
 
-    // Cleanup interval on component unmount.
-    return () => clearInterval(intervalId);
+    // Cleanup timeout and abort fetch on component unmount/update.
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, [coins]);
 
-  // Recalculate conversions when prices are updated.
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    convertCoinsAmounts(lastBaseCoin, amounts[lastBaseCoin]);
-  }, [prices]);
-
   /**
-   * Convert the amounts of the coins to the equivalent amount of the base
-   * coin used.
+   * Calculates the display value for a specific coin based on the current base coin.
    *
-   * @param {string} baseCoin - The coin to use as a base.
-   * @param {number} amountOverride - The new amount for the base coin.
+   * @param {string} targetCoin - The coin to calculate for.
+   * @return {string | number} The calculated amount or the raw input if it's the base.
    */
-  const convertCoinsAmounts = (baseCoin, amountOverride) => {
-    setLastBaseCoin(baseCoin);
-    const newAmounts = {
-      ...amounts
-    };
-    newAmounts[baseCoin] = amountOverride;
-
-    // Convert the current amount to USD.
-    const usdAmount = 'usd' !== baseCoin ? amountOverride * prices[baseCoin] : amountOverride;
-    if ('usd' !== baseCoin) {
-      newAmounts.usd = usdAmount;
-    }
-
-    // Convert all the other coins.
-    for (const [targetCoin, targetPrice] of Object.entries(prices)) {
-      if (baseCoin !== targetCoin) {
-        newAmounts[targetCoin] = calculateConversion(usdAmount, targetPrice);
-      }
-    }
-    setAmounts(newAmounts);
-  };
-
-  /**
-   * Handler of the coin amounts changes.
-   *
-   * @param e - The input changed.
-   * @param coin - The coin being changed.
-   */
-  const handleAmountChange = (e, coin) => {
-    const value = e.target.value;
-    // Allow empty input to be treated as 0, otherwise parse as float.
-    const newAmount = value === '' ? 0 : parseFloat(value);
-    convertCoinsAmounts(coin, newAmount);
+  const getDisplayAmount = targetCoin => {
+    if (baseAmount === '' || baseAmount === 0) return '';
+    if (targetCoin === baseCoin) return baseAmount;
+    if ('usd' !== baseCoin && !prices[baseCoin]) return '';
+    if ('usd' !== targetCoin && !prices[targetCoin]) return '';
+    const usdValue = 'usd' === baseCoin ? baseAmount : baseAmount * prices[baseCoin];
+    const targetValue = 'usd' === targetCoin ? usdValue : usdValue / prices[targetCoin];
+    return formatConvertedAmount(targetCoin, targetValue);
   };
 
   /**
@@ -172,7 +157,7 @@ function FrontendConverter({
    * @param {React.MouseEvent<HTMLTableRowElement>} e - The click event.
    */
   const handleRowClick = e => {
-    if (e.target.tagName === 'INPUT') {
+    if ('INPUT' === e.target.tagName) {
       return;
     }
     const input = e.currentTarget.querySelector('input');
@@ -186,29 +171,36 @@ function FrontendConverter({
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("thead", {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
+            scope: "col",
             className: "mcc-converter-th-coin",
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Cryptocurrency', 'multi-crypto-convert')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
+            scope: "col",
             className: "mcc-converter-th-price",
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Price (USD)', 'multi-crypto-convert')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
+            scope: "col",
             className: "mcc-converter-th-amount",
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Converted Amount', 'multi-crypto-convert')
           })]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
-          className: `mcc-converter-row${'usd' === lastBaseCoin ? ' mcc-row-active' : ''}`,
+          className: `mcc-converter-row${'usd' === baseCoin ? ' mcc-row-active' : ''}`,
           onClick: handleRowClick,
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('USD', 'multi-crypto-convert')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-            children: formatPrice(1)
+            children: formatPrice(1.0) /* USD is always 1 USD */
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("input", {
               id: "mcc-usd-amount",
               type: "number",
               className: "mcc-amount-input",
-              value: 'usd' === lastBaseCoin ? amounts.usd : amounts.usd.toFixed(2),
-              onChange: e => handleAmountChange(e, 'usd'),
+              "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Amount in USD', 'multi-crypto-convert'),
+              value: getDisplayAmount('usd'),
+              onChange: e => {
+                setBaseCoin('usd');
+                setBaseAmount(e.target.value === '' ? '' : parseFloat(e.target.value));
+              },
               placeholder: "1.00",
               step: "0.01",
               min: "0"
@@ -221,12 +213,19 @@ function FrontendConverter({
             colSpan: 3,
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Loading prices...', 'multi-crypto-convert')
           })
+        }) : error ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("tr", {
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
+            colSpan: 3,
+            className: "mcc-error",
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Error loading prices.', 'multi-crypto-convert')
+          })
         }) : coins.map(coin => {
           const price = prices[coin];
-          const isCurrentCoin = coin === lastBaseCoin;
+          const isCurrentCoin = coin === baseCoin;
+          const inputId = `mcc-amount-${coin}`;
           return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
             "data-coin": coin,
-            className: isCurrentCoin ? 'mcc-row-active' : '',
+            className: isCurrentCoin ? 'mcc-row-active mcc-converter-row' : 'mcc-converter-row',
             onClick: handleRowClick,
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
               children: coin.toUpperCase()
@@ -234,10 +233,15 @@ function FrontendConverter({
               children: formatPrice(price)
             }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
               children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("input", {
+                id: inputId,
                 type: "number",
+                "aria-label": `Amount in ${coin.toUpperCase()}`,
                 className: "mcc-amount-input",
-                value: isCurrentCoin ? amounts[coin] : formatConvertedAmount(amounts[coin]),
-                onChange: e => handleAmountChange(e, coin),
+                value: getDisplayAmount(coin),
+                onChange: e => {
+                  setBaseCoin(coin);
+                  setBaseAmount(e.target.value === '' ? '' : parseFloat(e.target.value));
+                },
                 placeholder: "-",
                 step: "0.00000001",
                 min: "0"

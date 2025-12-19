@@ -29,3 +29,6 @@
 .wp-block-multi-crypto-convert-converter .wp-block-table.is-style-stripes tbody tr.mcc-row-active:nth-child(odd) {
   background-color: var(--wp--preset--color--accent-1, rgba(0, 0, 0, 0.05));
 }
+.wp-block-multi-crypto-convert-converter .mcc-error {
+  color: var(--wp--preset--color--vivid-red, #cf2e2e);
+}
