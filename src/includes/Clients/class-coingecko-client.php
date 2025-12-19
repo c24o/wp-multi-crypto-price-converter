@@ -20,7 +20,7 @@ use Psr\SimpleCache\CacheInterface;
 final class Coingecko_Client extends Abstract_Cached_API_Client {
 
 	private const COINGECKO_API_URL = 'https://api.coingecko.com/api/v3/';
-	private const PRICE_ENDPOIINT = 'simple/price';
+	private const PRICE_ENDPOINT = 'simple/price';
 	private const COIN_LIST_ENDPOINT = 'coins/list';
 	private const DEFAULT_TIMEOUT_SECONDS = 10;
 	private const MAX_SYMBOLS_PER_REQUEST = 50;
@@ -247,8 +247,8 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 				'symbols'       => implode( ',', $symbols ),
 				'vs_currencies' => 'usd',
 			];
-			$url = add_query_arg( $args, self::COINGECKO_API_URL . self::PRICE_ENDPOIINT );
-			$api_key_header = isset( $settings[ self::API_KEY_TYPE_FIELD ] ) && 'demo' === $this->settings[ self::API_KEY_TYPE_FIELD ]
+			$url = add_query_arg( $args, self::COINGECKO_API_URL . self::PRICE_ENDPOINT );
+			$api_key_header = isset( $this->settings[ self::API_KEY_TYPE_FIELD ] ) && 'demo' === $this->settings[ self::API_KEY_TYPE_FIELD ]
 				? 'x_cg_pro_api_key'
 				: 'x-cg-demo-api-key';
 			$response = wp_remote_get(
@@ -273,7 +273,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 					'coingecko_api_error_wrong_status',
 					sprintf(
 						'External API(%s) returned non-200 status code: %s.',
-						self::PRICE_ENDPOIINT,
+						self::PRICE_ENDPOINT,
 						$status_code
 					)
 				);
@@ -288,7 +288,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 					'coingecko_api_error_malformed_json',
 					sprintf(
 						'Invalid or malformed JSON received from API(%s).',
-						self::PRICE_ENDPOIINT
+						self::PRICE_ENDPOINT
 					)
 				);
 			}
@@ -342,7 +342,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 		}
 
 		$url = self::COINGECKO_API_URL . self::COIN_LIST_ENDPOINT;
-		$api_key_header = isset( $settings[ self::API_KEY_TYPE_FIELD ] ) && 'demo' === $this->settings[ self::API_KEY_TYPE_FIELD ]
+		$api_key_header = isset( $this->settings[ self::API_KEY_TYPE_FIELD ] ) && 'demo' === $this->settings[ self::API_KEY_TYPE_FIELD ]
 			? 'x_cg_pro_api_key'
 			: 'x-cg-demo-api-key';
 		$response = wp_remote_get(

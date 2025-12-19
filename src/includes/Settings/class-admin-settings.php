@@ -259,6 +259,11 @@ final class Admin_Settings {
 			$available_coins = $client->get_available_coins();
 			$selected_coins_ids = $this->get_selected_coins_ids();
 
+			if ( is_wp_error( $available_coins ) ) {
+				echo '<p>' . esc_html__( 'An error getting the coins has occurred.', 'multi-crypto-convert' ) . '</p>';
+				return;
+			}
+
 			if ( empty( $available_coins ) ) {
 				echo '<p>' . esc_html__( 'No coins available. Please configure your API source and refresh the coin list.', 'multi-crypto-convert' ) . '</p>';
 				return;
