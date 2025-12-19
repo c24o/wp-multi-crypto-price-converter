@@ -165,10 +165,24 @@ function FrontendConverter({
     const newAmount = value === '' ? 0 : parseFloat(value);
     convertCoinsAmounts(coin, newAmount);
   };
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("div", {
-    className: "mcc-converter-wrapper",
+
+  /**
+   * Focus the input when clicking on the row cells.
+   *
+   * @param {React.MouseEvent<HTMLTableRowElement>} e - The click event.
+   */
+  const handleRowClick = e => {
+    if (e.target.tagName === 'INPUT') {
+      return;
+    }
+    const input = e.currentTarget.querySelector('input');
+    if (input) {
+      input.focus();
+    }
+  };
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("figure", {
+    className: "wp-block-table is-style-stripes",
     children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("table", {
-      className: "mcc-converter-table",
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("thead", {
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
@@ -182,22 +196,17 @@ function FrontendConverter({
             children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Converted Amount', 'multi-crypto-convert')
           })]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
-          className: "mcc-converter-row",
+          className: `mcc-converter-row${'usd' === lastBaseCoin ? ' mcc-row-active' : ''}`,
+          onClick: handleRowClick,
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
-              className: "mcc-coin-symbol",
-              children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('USD', 'multi-crypto-convert')
-            })
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('USD', 'multi-crypto-convert')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-            children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
-              className: "mcc-coin-price",
-              children: formatPrice(1)
-            })
+            children: formatPrice(1)
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("input", {
               id: "mcc-usd-amount",
               type: "number",
-              className: "mcc-converter-input",
+              className: "mcc-amount-input",
               value: 'usd' === lastBaseCoin ? amounts.usd : amounts.usd.toFixed(2),
               onChange: e => handleAmountChange(e, 'usd'),
               placeholder: "1.00",
@@ -216,25 +225,17 @@ function FrontendConverter({
           const price = prices[coin];
           const isCurrentCoin = coin === lastBaseCoin;
           return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
-            className: "mcc-converter-row",
             "data-coin": coin,
+            className: isCurrentCoin ? 'mcc-row-active' : '',
+            onClick: handleRowClick,
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-              className: "mcc-converter-td-coin",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
-                className: "mcc-coin-symbol",
-                children: coin.toUpperCase()
-              })
+              children: coin.toUpperCase()
             }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-              className: "mcc-converter-td-price",
-              children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("span", {
-                className: "mcc-coin-price",
-                children: formatPrice(price)
-              })
+              children: formatPrice(price)
             }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-              className: "mcc-converter-td-amount",
               children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("input", {
                 type: "number",
-                className: "mcc-converted-amount",
+                className: "mcc-amount-input",
                 value: isCurrentCoin ? amounts[coin] : formatConvertedAmount(amounts[coin]),
                 onChange: e => handleAmountChange(e, coin),
                 placeholder: "-",

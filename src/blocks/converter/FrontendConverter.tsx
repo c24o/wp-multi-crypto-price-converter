@@ -151,27 +151,45 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 		convertCoinsAmounts( coin, newAmount );
 	};
 
+	/**
+	 * Focus the input when clicking on the row cells.
+	 *
+	 * @param {React.MouseEvent<HTMLTableRowElement>} e - The click event.
+	 */
+	const handleRowClick = ( e: React.MouseEvent<HTMLTableRowElement> ) => {
+		if ( ( e.target as HTMLElement ).tagName === 'INPUT' ) {
+			return;
+		}
+		const input = e.currentTarget.querySelector( 'input' );
+		if ( input ) {
+			input.focus();
+		}
+	};
+
 	return (
-		<div className="mcc-converter-wrapper">
-			<table className="mcc-converter-table">
+		<figure className="wp-block-table is-style-stripes">
+			<table>
 				<thead>
 					<tr>
 						<th className="mcc-converter-th-coin">{ __( 'Cryptocurrency', 'multi-crypto-convert' ) }</th>
 						<th className="mcc-converter-th-price">{ __( 'Price (USD)', 'multi-crypto-convert' ) }</th>
 						<th className="mcc-converter-th-amount">{ __( 'Converted Amount', 'multi-crypto-convert' ) }</th>
 					</tr>
-					<tr className="mcc-converter-row">
+					<tr
+						className={ `mcc-converter-row${ 'usd' === lastBaseCoin ? ' mcc-row-active' : '' }` }
+						onClick={ handleRowClick }
+					>
 						<td>
-							<span className="mcc-coin-symbol">{ __( 'USD', 'multi-crypto-convert' ) }</span>
+							{ __( 'USD', 'multi-crypto-convert' ) }
 						</td>
 						<td>
-							<span className="mcc-coin-price">{ formatPrice( 1 ) }</span>
+							{ formatPrice( 1 ) }
 						</td>
 						<td>
 							<input
 								id="mcc-usd-amount"
 								type="number"
-								className="mcc-converter-input"
+								className="mcc-amount-input"
 								value={ 'usd' === lastBaseCoin ? amounts.usd : amounts.usd.toFixed( 2 ) }
 								onChange={ ( e ) => handleAmountChange( e, 'usd' ) }
 								placeholder="1.00"
@@ -191,17 +209,22 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 							const price = prices[ coin ];
 							const isCurrentCoin = coin === lastBaseCoin;
 							return (
-								<tr key={ coin } className="mcc-converter-row" data-coin={ coin }>
-									<td className="mcc-converter-td-coin">
-										<span className="mcc-coin-symbol">{ coin.toUpperCase() }</span>
+								<tr
+									key={ coin }
+									data-coin={ coin }
+									className={ isCurrentCoin ? 'mcc-row-active' : '' }
+									onClick={ handleRowClick }
+								>
+									<td>
+										{ coin.toUpperCase() }
 									</td>
-									<td className="mcc-converter-td-price">
-										<span className="mcc-coin-price">{ formatPrice( price ) }</span>
+									<td>
+										{ formatPrice( price ) }
 									</td>
-									<td className="mcc-converter-td-amount">
+									<td>
 										<input
 											type="number"
-											className="mcc-converted-amount"
+											className="mcc-amount-input"
 											value={ isCurrentCoin ? amounts[ coin ] : formatConvertedAmount( amounts[ coin ] ) }
 											onChange={ ( e ) => handleAmountChange( e, coin ) }
 											placeholder="-"
@@ -215,6 +238,6 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 					) }
 				</tbody>
 			</table>
-		</div>
+		</figure>
 	);
 }
