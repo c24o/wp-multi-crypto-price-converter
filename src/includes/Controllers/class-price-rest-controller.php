@@ -2,15 +2,15 @@
 /**
  * Price REST Controller
  *
- * @package Multi_Crypto_Convert\Controllers
+ * @package Multi_Crypto_Price_Converter\Controllers
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Controllers;
+namespace Multi_Crypto_Price_Converter\Controllers;
 
-use Multi_Crypto_Convert\Clients\Crypto_API_Client;
-use Multi_Crypto_Convert\Settings\Admin_Settings;
+use Multi_Crypto_Price_Converter\Clients\Crypto_API_Client;
+use Multi_Crypto_Price_Converter\Settings\Admin_Settings;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -60,7 +60,7 @@ final class Price_Rest_Controller {
 				'permission_callback' => '__return_true',
 				'args'                => [
 					'coins' => [
-						'description'       => __( 'Comma-separated list of coin symbols (e.g., BTC,ETH,ADA)', 'multi-crypto-convert' ),
+						'description'       => __( 'Comma-separated list of coin symbols (e.g., BTC,ETH,ADA)', 'multi-crypto-price-converter' ),
 						'type'              => 'string',
 						'required'          => false,
 						'sanitize_callback' => [ $this, 'sanitize_coins_param' ],
@@ -171,7 +171,7 @@ final class Price_Rest_Controller {
 			return new WP_REST_Response(
 				[
 					'success' => false,
-					'message' => __( 'Failed to retrieve prices. Please try again later.', 'multi-crypto-convert' ),
+					'message' => __( 'Failed to retrieve prices. Please try again later.', 'multi-crypto-price-converter' ),
 				],
 				500
 			);

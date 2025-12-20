@@ -4,7 +4,7 @@
  * Provides TypeScript type definitions for the MultiSelectControl component
  * since the package doesn't include type definitions.
  *
- * @package Multi_Crypto_Convert
+ * @package Multi_Crypto_Price_Converter
  */
 
 declare module '@codeamp/block-components' {

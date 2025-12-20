@@ -2,16 +2,16 @@
 /**
  * Abstract Cached API Client
  *
- * @package Multi_Crypto_Convert\Clients
+ * @package Multi_Crypto_Price_Converter\Clients
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Clients;
+namespace Multi_Crypto_Price_Converter\Clients;
 
 use Psr\SimpleCache\CacheInterface;
-use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
-use Multi_Crypto_Convert\Entities\Coin_Entity;
+use Multi_Crypto_Price_Converter\Entities\Crypto_Price_Entity;
+use Multi_Crypto_Price_Converter\Entities\Coin_Entity;
 use WP_Error;
 
 /**
@@ -20,10 +20,10 @@ use WP_Error;
  */
 abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 
-	protected const CRON_HOOK = 'mcc_fetch_prices_cron';
-	protected const CRON_INTERVAL = 'mcc_interval';
-	protected const PRICE_CACHE_KEY = 'prices';
-	protected const COIN_LIST_CACHE_KEY = 'coin_list';
+	protected const CRON_HOOK = 'mcpc_fetch_prices_cron';
+	protected const CRON_INTERVAL = 'mcpc_interval';
+	protected const PRICE_CACHE_KEY = 'mcpc_prices';
+	protected const COIN_LIST_CACHE_KEY = 'mcpc_coin_list';
 
 	/**
 	 * Constructor.

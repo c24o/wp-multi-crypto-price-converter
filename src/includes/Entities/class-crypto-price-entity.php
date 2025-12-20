@@ -2,12 +2,12 @@
 /**
  * Crypto Price Entity
  *
- * @package Multi_Crypto_Convert\Entities
+ * @package Multi_Crypto_Price_Converter\Entities
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Entities;
+namespace Multi_Crypto_Price_Converter\Entities;
 
 /**
  * Represents a single crypto price data point (a Value Object).

@@ -2,7 +2,7 @@
 /**
  * Bootstrap file for WordPress plugin tests.
  *
- * @package Multi_Crypto_Convert\Tests
+ * @package Multi_Crypto_Price_Converter\Tests
  */
 
 // Load the Composer autoloader.

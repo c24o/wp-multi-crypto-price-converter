@@ -159,26 +159,26 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 			<table>
 				<thead>
 					<tr>
-						<th scope="col" className="mcc-converter-th-coin">{ __( 'Coin', 'multi-crypto-convert' ) }</th>
-						<th scope="col" className="mcc-converter-th-price">{ __( 'Price (USD)', 'multi-crypto-convert' ) }</th>
-						<th scope="col" className="mcc-converter-th-amount">{ __( 'Amount', 'multi-crypto-convert' ) }</th>
+						<th scope="col" className="mcpc-converter-th-coin">{ __( 'Coin', 'multi-crypto-price-converter' ) }</th>
+						<th scope="col" className="mcpc-converter-th-price">{ __( 'Price (USD)', 'multi-crypto-price-converter' ) }</th>
+						<th scope="col" className="mcpc-converter-th-amount">{ __( 'Amount', 'multi-crypto-price-converter' ) }</th>
 					</tr>
 					<tr
-						className={ `mcc-converter-row${ 'usd' === baseCoin ? ' mcc-row-active' : '' }` }
+						className={ `mcpc-converter-row${ 'usd' === baseCoin ? ' mcpc-row-active' : '' }` }
 						onClick={ handleRowClick }
 					>
 						<td>
-							{ __( 'USD', 'multi-crypto-convert' ) }
+							{ __( 'USD', 'multi-crypto-price-converter' ) }
 						</td>
 						<td>
 							{ formatPrice( 1.0 ) /* USD is always 1 USD */ }
 						</td>
 						<td>
 							<input
-								id="mcc-usd-amount"
+								id="mcpc-usd-amount"
 								type="number"
-								className="mcc-amount-input"
-								aria-label={ __( 'Amount in USD', 'multi-crypto-convert' ) }
+								className="mcpc-amount-input"
+								aria-label={ __( 'Amount in USD', 'multi-crypto-price-converter' ) }
 								value={ getDisplayAmount( 'usd' ) }
 								onChange={ ( e ) => {
 									setBaseCoin( 'usd' );
@@ -194,22 +194,22 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 				<tbody>
 					{ isLoading ? (
 						<tr>
-							<td colSpan={ 3 }>{ __( 'Loading prices...', 'multi-crypto-convert' ) }</td>
+							<td colSpan={ 3 }>{ __( 'Loading prices...', 'multi-crypto-price-converter' ) }</td>
 						</tr>
 					) : error ? (
 						<tr>
-							<td colSpan={ 3 } className="mcc-error">{ __( 'Error loading prices.', 'multi-crypto-convert' ) }</td>
+							<td colSpan={ 3 } className="mcpc-error">{ __( 'Error loading prices.', 'multi-crypto-price-converter' ) }</td>
 						</tr>
 					) : (
 						coins.map( ( coin ) => {
 							const price = prices[ coin ];
 							const isCurrentCoin = coin === baseCoin;
-							const inputId = `mcc-amount-${ coin }`;
+							const inputId = `mcpc-amount-${ coin }`;
 							return (
 								<tr
 									key={ coin }
 									data-coin={ coin }
-									className={ isCurrentCoin ? 'mcc-row-active mcc-converter-row' : 'mcc-converter-row' }
+									className={ isCurrentCoin ? 'mcpc-row-active mcpc-converter-row' : 'mcpc-converter-row' }
 									onClick={ handleRowClick }
 								>
 									<td>
@@ -223,7 +223,7 @@ export default function FrontendConverter( { coins }: FrontendConverterProps ): 
 											id={ inputId }
 											type="number"
 											aria-label={ `Amount in ${ coin.toUpperCase() }` }
-											className="mcc-amount-input"
+											className="mcpc-amount-input"
 											value={ getDisplayAmount( coin ) }
 											onChange={ ( e ) => {
 												setBaseCoin( coin );

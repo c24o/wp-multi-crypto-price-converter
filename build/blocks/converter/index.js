@@ -19,7 +19,7 @@
 /***/ ((module) => {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"multi-crypto-convert/converter","version":"0.1.0","title":"Multi Crypto Converter","category":"widgets","icon":"money-alt","description":"Widget to convert a value to multiple cryptocurrencies.","example":{},"supports":{"html":false},"textdomain":"multi-crypto-convert-wp-plugin","editorScript":"file:./index.js","style":"file:./style-index.css","viewScript":"file:./view.js","render":"file:./render.php","attributes":{"coins":{"type":"string"}}}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"multi-crypto-price-converter/converter","version":"0.1.0","title":"Multi Crypto Price Converter","category":"widgets","icon":"money-alt","description":"Widget to convert multiple cryptocurrencies prices at once.","example":{},"supports":{"html":false},"textdomain":"multi-crypto-price-converter","editorScript":"file:./index.js","style":"file:./style-index.css","viewScript":"file:./view.js","render":"file:./render.php","attributes":{"coins":{"type":"string"}}}');
 
 /***/ }),
 
@@ -106,14 +106,14 @@ function Edit({
   return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.Fragment, {
     children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InspectorControls, {
       children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
-        title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Coins', 'multi-crypto-convert'),
+        title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Coins', 'multi-crypto-price-converter'),
         children: isLoading ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
-          children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Loading coins...', 'multi-crypto-convert')
+          children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Loading coins...', 'multi-crypto-price-converter')
         }) : coinsList.length === 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
-          children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('No coins available. Please configure coins in the plugin settings.', 'multi-crypto-convert')
+          children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('No coins available. Please configure coins in the plugin settings.', 'multi-crypto-price-converter')
         }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_codeamp_block_components__WEBPACK_IMPORTED_MODULE_3__.MultiSelectControl, {
           __next40pxDefaultSize: true,
-          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Select Coins', 'multi-crypto-convert'),
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Select Coins', 'multi-crypto-price-converter'),
           value: coins,
           options: coinsList,
           onChange: selectedCoins => setAttributes({
@@ -125,7 +125,7 @@ function Edit({
     }), coins && coins.length > 0 ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
       ...(0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps)(),
       children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("span", {
-        children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Selected coins:', 'multi-crypto-convert')
+        children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Multi Crypto Price Converter - Selected coins:', 'multi-crypto-price-converter')
       }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("ul", {
         children: coins.map(coin => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("li", {
           children: coinsList.find(coinItem => coinItem.value === coin)?.label || coin
@@ -133,7 +133,7 @@ function Edit({
       })]
     }) : /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
       ...(0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps)(),
-      children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('No coins selected.', 'multi-crypto-convert')
+      children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('No coins selected.', 'multi-crypto-price-converter')
     })]
   });
 }
@@ -419,7 +419,7 @@ module.exports = window["ReactJSXRuntime"];
 /******/ 			return __webpack_require__.O(result);
 /******/ 		}
 /******/ 		
-/******/ 		var chunkLoadingGlobal = globalThis["webpackChunkmulti_crypto_convert_wp_plugin"] = globalThis["webpackChunkmulti_crypto_convert_wp_plugin"] || [];
+/******/ 		var chunkLoadingGlobal = globalThis["webpackChunkmulti_crypto_price_converter"] = globalThis["webpackChunkmulti_crypto_price_converter"] || [];
 /******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
 /******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 	})();

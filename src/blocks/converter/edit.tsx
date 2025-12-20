@@ -80,15 +80,15 @@ export default function Edit({ attributes, setAttributes }: EditProps): JSX.Elem
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={__('Coins', 'multi-crypto-convert')}>
+				<PanelBody title={__('Coins', 'multi-crypto-price-converter')}>
 					{isLoading ? (
-						<p>{__('Loading coins...', 'multi-crypto-convert')}</p>
+						<p>{__('Loading coins...', 'multi-crypto-price-converter')}</p>
 					) : coinsList.length === 0 ? (
-						<p>{__('No coins available. Please configure coins in the plugin settings.', 'multi-crypto-convert')}</p>
+						<p>{__('No coins available. Please configure coins in the plugin settings.', 'multi-crypto-price-converter')}</p>
 					) : (
 						<MultiSelectControl
 							__next40pxDefaultSize
-							label={__('Select Coins', 'multi-crypto-convert')}
+							label={__('Select Coins', 'multi-crypto-price-converter')}
 							value={coins}
 							options={coinsList}
 							onChange={(selectedCoins: string[]) => setAttributes({ coins: selectedCoins.join(',') })}
@@ -100,7 +100,7 @@ export default function Edit({ attributes, setAttributes }: EditProps): JSX.Elem
 
 			{coins && coins.length > 0 ? (
 				<div {...useBlockProps()}>
-					<span>{__('Selected coins:', 'multi-crypto-convert')}</span>
+					<span>{__('Multi Crypto Price Converter - Selected coins:', 'multi-crypto-price-converter')}</span>
 					<ul>
 						{coins.map((coin) => (
 							<li key={coin}>{coinsList.find((coinItem) => coinItem.value === coin)?.label || coin}</li>
@@ -109,7 +109,7 @@ export default function Edit({ attributes, setAttributes }: EditProps): JSX.Elem
 				</div>
 			) : (
 				<p {...useBlockProps()}>
-					{__('No coins selected.', 'multi-crypto-convert')}
+					{__('No coins selected.', 'multi-crypto-price-converter')}
 				</p>
 			)}
 		</>

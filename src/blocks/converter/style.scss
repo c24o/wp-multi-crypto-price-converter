@@ -4,8 +4,8 @@
  * These styles apply to the converter block on the frontend.
  */
 
-.wp-block-multi-crypto-convert-converter {
-	.mcc-amount-input {
+.wp-block-multi-crypto-price-converter-converter {
+	.mcpc-amount-input {
 		border: none;
 		border-bottom: 1px solid transparent;
 		background: transparent;
@@ -23,16 +23,16 @@
 		}
 	}
 
-	tr:hover .mcc-amount-input {
+	tr:hover .mcpc-amount-input {
 		border-bottom: 1px solid var(--wp--preset--color--primary, #000);
 	}
 
-	tr.mcc-row-active,
-	.wp-block-table.is-style-stripes tbody tr.mcc-row-active:nth-child(odd) {
+	tr.mcpc-row-active,
+	.wp-block-table.is-style-stripes tbody tr.mcpc-row-active:nth-child(odd) {
 		background-color: var(--wp--preset--color--accent-1, rgba(0, 0, 0, 0.05));
 	}
 
-	.mcc-error {
+	.mcpc-error {
 		color: var(--wp--preset--color--vivid-red, #cf2e2e);
 	}
 }

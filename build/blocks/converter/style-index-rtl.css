@@ -6,7 +6,7 @@
  *
  * These styles apply to the converter block on the frontend.
  */
-.wp-block-multi-crypto-convert-converter .mcc-amount-input {
+.wp-block-multi-crypto-price-converter-converter .mcpc-amount-input {
   border: none;
   border-bottom: 1px solid transparent;
   background: transparent;
@@ -17,18 +17,18 @@
   padding: 0;
   box-shadow: none;
 }
-.wp-block-multi-crypto-convert-converter .mcc-amount-input:focus {
+.wp-block-multi-crypto-price-converter-converter .mcpc-amount-input:focus {
   outline: none;
   box-shadow: none;
   border-bottom: 1px solid var(--wp--preset--color--primary, #000);
 }
-.wp-block-multi-crypto-convert-converter tr:hover .mcc-amount-input {
+.wp-block-multi-crypto-price-converter-converter tr:hover .mcpc-amount-input {
   border-bottom: 1px solid var(--wp--preset--color--primary, #000);
 }
-.wp-block-multi-crypto-convert-converter tr.mcc-row-active,
-.wp-block-multi-crypto-convert-converter .wp-block-table.is-style-stripes tbody tr.mcc-row-active:nth-child(odd) {
+.wp-block-multi-crypto-price-converter-converter tr.mcpc-row-active,
+.wp-block-multi-crypto-price-converter-converter .wp-block-table.is-style-stripes tbody tr.mcpc-row-active:nth-child(odd) {
   background-color: var(--wp--preset--color--accent-1, rgba(0, 0, 0, 0.05));
 }
-.wp-block-multi-crypto-convert-converter .mcc-error {
+.wp-block-multi-crypto-price-converter-converter .mcpc-error {
   color: var(--wp--preset--color--vivid-red, #cf2e2e);
 }

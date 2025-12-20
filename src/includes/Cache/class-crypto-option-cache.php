@@ -2,12 +2,12 @@
 /**
  * Crypto Option Cache
  *
- * @package Multi_Crypto_Convert\Cache
+ * @package Multi_Crypto_Price_Converter\Cache
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Cache;
+namespace Multi_Crypto_Price_Converter\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 use DateInterval;
@@ -21,7 +21,7 @@ use DateInterval;
 final class Crypto_Option_Cache implements CacheInterface {
 
 	// The option key used to store the cached data.
-	private const OPTION_KEY = 'mcc_cache';
+	private const OPTION_KEY = 'mcpc_cache';
 
 	/**
 	 * Validates if the cache key follows PSR-16 standard.

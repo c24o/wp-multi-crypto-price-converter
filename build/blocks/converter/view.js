@@ -172,30 +172,30 @@ function FrontendConverter({
         children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
             scope: "col",
-            className: "mcc-converter-th-coin",
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Coin', 'multi-crypto-convert')
+            className: "mcpc-converter-th-coin",
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Coin', 'multi-crypto-price-converter')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
             scope: "col",
-            className: "mcc-converter-th-price",
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Price (USD)', 'multi-crypto-convert')
+            className: "mcpc-converter-th-price",
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Price (USD)', 'multi-crypto-price-converter')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("th", {
             scope: "col",
-            className: "mcc-converter-th-amount",
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Amount', 'multi-crypto-convert')
+            className: "mcpc-converter-th-amount",
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Amount', 'multi-crypto-price-converter')
           })]
         }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
-          className: `mcc-converter-row${'usd' === baseCoin ? ' mcc-row-active' : ''}`,
+          className: `mcpc-converter-row${'usd' === baseCoin ? ' mcpc-row-active' : ''}`,
           onClick: handleRowClick,
           children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('USD', 'multi-crypto-convert')
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('USD', 'multi-crypto-price-converter')
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             children: formatPrice(1.0) /* USD is always 1 USD */
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("input", {
-              id: "mcc-usd-amount",
+              id: "mcpc-usd-amount",
               type: "number",
-              className: "mcc-amount-input",
-              "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Amount in USD', 'multi-crypto-convert'),
+              className: "mcpc-amount-input",
+              "aria-label": (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Amount in USD', 'multi-crypto-price-converter'),
               value: getDisplayAmount('usd'),
               onChange: e => {
                 setBaseCoin('usd');
@@ -211,21 +211,21 @@ function FrontendConverter({
         children: isLoading ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("tr", {
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             colSpan: 3,
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Loading prices...', 'multi-crypto-convert')
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Loading prices...', 'multi-crypto-price-converter')
           })
         }) : error ? /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("tr", {
           children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
             colSpan: 3,
-            className: "mcc-error",
-            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Error loading prices.', 'multi-crypto-convert')
+            className: "mcpc-error",
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_1__.__)('Error loading prices.', 'multi-crypto-price-converter')
           })
         }) : coins.map(coin => {
           const price = prices[coin];
           const isCurrentCoin = coin === baseCoin;
-          const inputId = `mcc-amount-${coin}`;
+          const inputId = `mcpc-amount-${coin}`;
           return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsxs)("tr", {
             "data-coin": coin,
-            className: isCurrentCoin ? 'mcc-row-active mcc-converter-row' : 'mcc-converter-row',
+            className: isCurrentCoin ? 'mcpc-row-active mcpc-converter-row' : 'mcpc-converter-row',
             onClick: handleRowClick,
             children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)("td", {
               children: coin.toUpperCase()
@@ -236,7 +236,7 @@ function FrontendConverter({
                 id: inputId,
                 type: "number",
                 "aria-label": `Amount in ${coin.toUpperCase()}`,
-                className: "mcc-amount-input",
+                className: "mcpc-amount-input",
                 value: getDisplayAmount(coin),
                 onChange: e => {
                   setBaseCoin(coin);
@@ -391,7 +391,7 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 function initializeBlocks() {
-  const blockWrappers = document.querySelectorAll('.wp-block-multi-crypto-convert-converter');
+  const blockWrappers = document.querySelectorAll('.wp-block-multi-crypto-price-converter-converter');
   blockWrappers.forEach(div => {
     const coinsString = div.dataset.coins;
     if (!coinsString) {
@@ -401,7 +401,7 @@ function initializeBlocks() {
     if (0 === coins.length) {
       return;
     }
-    const container = div.querySelector('.mcc-converter-container');
+    const container = div.querySelector('.mcpc-converter-container');
     if (container) {
       const root = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createRoot)(container);
       root.render(/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_2__.jsx)(_FrontendConverter__WEBPACK_IMPORTED_MODULE_1__["default"], {

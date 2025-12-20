@@ -5,12 +5,12 @@
  * Handles the Select2 initialization and coin selection limit enforcement
  * in the plugin settings page.
  *
- * @package Multi_Crypto_Convert
+ * @package Multi_Crypto_Price_Converter
  */
 var MccAdminSettings;
 (function (MccAdminSettings) {
     function initializeCoinsInput() {
-        const coinsInputSelector = '.mcc-coins-select2';
+        const coinsInputSelector = '.mcpc-coins-select2';
         const coinsInput = jQuery(coinsInputSelector);
         // Initialize Select2 with search functionality.
         coinsInput.select2({

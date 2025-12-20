@@ -2,12 +2,12 @@
 /**
  * Coin Entity
  *
- * @package Multi_Crypto_Convert\Entities
+ * @package Multi_Crypto_Price_Converter\Entities
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Entities;
+namespace Multi_Crypto_Price_Converter\Entities;
 
 /**
  * Represents an available cryptocurrency for selection (Value Object).

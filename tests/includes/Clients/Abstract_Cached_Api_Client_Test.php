@@ -2,15 +2,15 @@
 /**
  * Unit Tests for the Abstract_Cached_API_Client class.
  *
- * @package Multi_Crypto_Convert/Tests/Clients
+ * @package Multi_Crypto_Price_Converter/Tests/Clients
  */
 
 declare( strict_types=1 );
 
-use Multi_Crypto_Convert\Cache\Crypto_Option_Cache;
-use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
-use Multi_Crypto_Convert\Entities\Coin_Entity;
-use Tests\Multi_Crypto_Convert\Clients\Mock_Cached_API_Client;
+use Multi_Crypto_Price_Converter\Cache\Crypto_Option_Cache;
+use Multi_Crypto_Price_Converter\Entities\Crypto_Price_Entity;
+use Multi_Crypto_Price_Converter\Entities\Coin_Entity;
+use Tests\Multi_Crypto_Price_Converter\Clients\Mock_Cached_API_Client;
 
 /**
  * Unit tests for Abstract_Cached_API_Client non-abstract methods.
@@ -90,7 +90,7 @@ class Abstract_Cached_Api_Client_Test extends WP_UnitTestCase {
 		parent::tearDown();
 
 		// Unschedule cron events.
-		wp_clear_scheduled_hook( 'mcc_fetch_prices_cron_test_api' );
+		wp_clear_scheduled_hook( 'mcpc_fetch_prices_cron_test_api' );
 	}
 
 	/**
@@ -184,11 +184,11 @@ class Abstract_Cached_Api_Client_Test extends WP_UnitTestCase {
 
 		$result = $this->client->add_custom_cron_interval( $schedules );
 
-		$this->assertArrayHasKey( 'mcc_interval_test_api', $result );
-		$this->assertArrayHasKey( 'interval', $result['mcc_interval_test_api'] );
-		$this->assertArrayHasKey( 'display', $result['mcc_interval_test_api'] );
-		$this->assertIsInt( $result['mcc_interval_test_api']['interval'] );
-		$this->assertGreaterThan( 0, $result['mcc_interval_test_api']['interval'] );
+		$this->assertArrayHasKey( 'mcpc_interval_test_api', $result );
+		$this->assertArrayHasKey( 'interval', $result['mcpc_interval_test_api'] );
+		$this->assertArrayHasKey( 'display', $result['mcpc_interval_test_api'] );
+		$this->assertIsInt( $result['mcpc_interval_test_api']['interval'] );
+		$this->assertGreaterThan( 0, $result['mcpc_interval_test_api']['interval'] );
 	}
 
 	/**

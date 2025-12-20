@@ -4,7 +4,7 @@
  * Handles the Select2 initialization and coin selection limit enforcement
  * in the plugin settings page.
  *
- * @package Multi_Crypto_Convert
+ * @package Multi_Crypto_Price_Converter
  */
 
 interface MccSettings {

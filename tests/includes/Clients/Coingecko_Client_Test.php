@@ -2,15 +2,15 @@
 /**
  * Unit Tests for the Coingecko Client.
  *
- * @package Multi_Crypto_Convert/Tests/Clients
+ * @package Multi_Crypto_Price_Converter/Tests/Clients
  */
 
 declare( strict_types=1 );
 
-use Multi_Crypto_Convert\Clients\Coingecko_Client;
-use Multi_Crypto_Convert\Cache\Crypto_Option_Cache;
-use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
-use Multi_Crypto_Convert\Entities\Coin_Entity;
+use Multi_Crypto_Price_Converter\Clients\Coingecko_Client;
+use Multi_Crypto_Price_Converter\Cache\Crypto_Option_Cache;
+use Multi_Crypto_Price_Converter\Entities\Crypto_Price_Entity;
+use Multi_Crypto_Price_Converter\Entities\Coin_Entity;
 
 /**
  * Unit tests for Coingecko_Client class using pre_http_request filter.
@@ -314,11 +314,11 @@ class Coingecko_Client_Test extends WP_UnitTestCase {
 		$result    = $this->client->add_custom_cron_interval( $schedules );
 
 		$this->assertIsArray( $result );
-		$this->assertArrayHasKey( 'mcc_interval_coingecko', $result );
-		$this->assertArrayHasKey( 'interval', $result['mcc_interval_coingecko'] );
-		$this->assertArrayHasKey( 'display', $result['mcc_interval_coingecko'] );
-		$this->assertIsInt( $result['mcc_interval_coingecko']['interval'] );
-		$this->assertGreaterThan( 0, $result['mcc_interval_coingecko']['interval'] );
+		$this->assertArrayHasKey( 'mcpc_interval_coingecko', $result );
+		$this->assertArrayHasKey( 'interval', $result['mcpc_interval_coingecko'] );
+		$this->assertArrayHasKey( 'display', $result['mcpc_interval_coingecko'] );
+		$this->assertIsInt( $result['mcpc_interval_coingecko']['interval'] );
+		$this->assertGreaterThan( 0, $result['mcpc_interval_coingecko']['interval'] );
 	}
 
 	/**

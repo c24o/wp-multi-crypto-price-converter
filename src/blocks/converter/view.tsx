@@ -12,7 +12,7 @@ import FrontendConverter from './FrontendConverter';
  * Initialize all converter blocks on the page
  */
 function initializeBlocks() {
-	const blockWrappers = document.querySelectorAll<HTMLElement>( '.wp-block-multi-crypto-convert-converter' );
+	const blockWrappers = document.querySelectorAll<HTMLElement>( '.wp-block-multi-crypto-price-converter-converter' );
 	blockWrappers.forEach( ( div ) => {
 		const coinsString = div.dataset.coins;
 		if ( ! coinsString ) {
@@ -24,7 +24,7 @@ function initializeBlocks() {
 			return;
 		}
 
-		const container = div.querySelector( '.mcc-converter-container' );
+		const container = div.querySelector( '.mcpc-converter-container' );
 		if ( container ) {
 			const root = createRoot( container );
 			root.render( <FrontendConverter coins={ coins } /> );

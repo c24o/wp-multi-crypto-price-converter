@@ -1,8 +1,8 @@
 {
-	"name": "multi-crypto-convert-wp-plugin",
+	"name": "multi-crypto-price-converter",
 	"version": "0.1.0",
-	"description": "A WordPress plugin for instant multi-crypto conversions.",
-	"author": "The WordPress Contributors",
+	"description": "A WordPress plugin that lists cryptocurrency prices and allows instant conversion of prices between any of the listed coins.",
+	"author": "Carlos Guzman",
 	"license": "MIT License",
 	"main": "build/index.js",
 	"scripts": {

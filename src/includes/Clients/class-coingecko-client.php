@@ -2,16 +2,16 @@
 /**
  * CoinGecko Client
  *
- * @package Multi_Crypto_Convert\Clients
+ * @package Multi_Crypto_Price_Converter\Clients
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Clients;
+namespace Multi_Crypto_Price_Converter\Clients;
 
-use Multi_Crypto_Convert\Entities\Coin_Entity;
-use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
-use Multi_Crypto_Convert\Settings\Admin_Settings;
+use Multi_Crypto_Price_Converter\Entities\Coin_Entity;
+use Multi_Crypto_Price_Converter\Entities\Crypto_Price_Entity;
+use Multi_Crypto_Price_Converter\Settings\Admin_Settings;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -50,19 +50,19 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	 */
 	public function register_hooks(): void {
 		add_action(
-			'mcc_register_client_settings_fields',
+			'mcpc_register_client_settings_fields',
 			[ $this, 'register_settings_fields' ],
 			10,
 			2
 		);
 		add_filter(
-			'mcc_sanitize_client_settings',
+			'mcpc_sanitize_client_settings',
 			[ $this, 'sanitize_settings_fields' ],
 			10,
 			2
 		);
 		add_filter(
-			'mcc_require_coins_list_update_after_settings_saving',
+			'mcpc_require_coins_list_update_after_settings_saving',
 			[ $this, 'should_update_coins_list' ],
 			10,
 			3
@@ -82,19 +82,19 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	public function register_settings_fields( string $page_slug, string $section_id ): void {
 		add_settings_field(
 			self::API_KEY_FIELD,
-			__( 'API Key', 'multi-crypto-convert' ),
+			__( 'API Key', 'multi-crypto-price-converter' ),
 			function () {
 				$current_api_key = $this->settings[ self::API_KEY_FIELD ] ?? '';
 				?>
 				<input
 					type="text"
-					id="mcc_api_key"
+					id="mcpc_api_key"
 					name="<?php printf( '%s[%s]', esc_attr( Admin_Settings::SETTINGS_OPTION_NAME ), esc_attr( self::API_KEY_FIELD ) ); ?>"
 					value="<?php echo esc_attr( $current_api_key ); ?>"
 					class="regular-text"
 				/>
 				<p class="description">
-					<?php esc_html_e( 'Enter your API key for the selected cryptocurrency data source.', 'multi-crypto-convert' ); ?>
+					<?php esc_html_e( 'Enter your API key for the selected cryptocurrency data source.', 'multi-crypto-price-converter' ); ?>
 				</p>
 				<?php
 			},
@@ -104,12 +104,12 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 
 		add_settings_field(
 			self::API_KEY_TYPE_FIELD,
-			__( 'API Key Type', 'multi-crypto-convert' ),
+			__( 'API Key Type', 'multi-crypto-price-converter' ),
 			function () {
 				$current_api_key_type = $this->settings[ self::API_KEY_TYPE_FIELD ] ?? self::DEFAULT_API_KEY_TYPE;
 				?>
 				<select
-					id="mcc_api_key_type"
+					id="mcpc_api_key_type"
 					name="<?php printf( '%s[%s]', esc_attr( Admin_Settings::SETTINGS_OPTION_NAME ), esc_attr( self::API_KEY_TYPE_FIELD ) ); ?>"
 					class="regular-text"
 				>
@@ -123,7 +123,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 					<?php endforeach; ?>
 				</select>
 				<p class="description">
-					<?php esc_html_e( 'Select the type of API key you are using.', 'multi-crypto-convert' ); ?>
+					<?php esc_html_e( 'Select the type of API key you are using.', 'multi-crypto-price-converter' ); ?>
 				</p>
 				<?php
 			},
@@ -157,15 +157,15 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	 */
 	public function get_api_key_types(): array {
 		return [
-			'demo' => __( 'Demo', 'multi-crypto-convert' ),
-			'paid' => __( 'Paid', 'multi-crypto-convert' ),
+			'demo' => __( 'Demo', 'multi-crypto-price-converter' ),
+			'paid' => __( 'Paid', 'multi-crypto-price-converter' ),
 		];
 	}
 
 	/**
 	 * Check if the coins list should be updated when the settings are saved.
 	 *
-	 * @filter mcc_require_coins_list_update_after_settings_saving 10 2
+	 * @filter mcpc_require_coins_list_update_after_settings_saving 10 2
 	 *
 	 * @param bool $require_update True if the coins list is going to be updated.
 	 * @param array $old_value Settings stored before the update.
@@ -205,7 +205,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	public function get_prices_update_interval_data(): array {
 		return [
 			'interval' => 900, // 15 minutes due to the rate limit for the free tier.
-			'display'  => __( 'Every 15 Minutes', 'multi-crypto-convert' ),
+			'display'  => __( 'Every 15 Minutes', 'multi-crypto-price-converter' ),
 		];
 	}
 
@@ -222,7 +222,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 				'coingecko_api_error_missing_key',
 				__(
 					'CoinGecko API key is missing. Please provide a valid API key in the plugin settings.',
-					'multi-crypto-convert'
+					'multi-crypto-price-converter'
 				)
 			);
 		}
@@ -336,7 +336,7 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 				'coingecko_api_error_missing_key',
 				__(
 					'CoinGecko API key is missing. Please provide a valid API key in the plugin settings.',
-					'multi-crypto-convert'
+					'multi-crypto-price-converter'
 				)
 			);
 		}

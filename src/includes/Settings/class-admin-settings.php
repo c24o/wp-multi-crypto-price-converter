@@ -2,25 +2,25 @@
 /**
  * Admin Settings
  *
- * @package Multi_Crypto_Convert\Settings
+ * @package Multi_Crypto_Price_Converter\Settings
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Settings;
+namespace Multi_Crypto_Price_Converter\Settings;
 
-use Multi_Crypto_Convert\Clients\Crypto_API_Client;
-use Multi_Crypto_Convert\Clients\Crypto_Client_Factory;
+use Multi_Crypto_Price_Converter\Clients\Crypto_API_Client;
+use Multi_Crypto_Price_Converter\Clients\Crypto_Client_Factory;
 
 /**
  * Manages the admin settings page for the Multi Crypto Price Converter plugin.
  */
 final class Admin_Settings {
 
-	public const PAGE_SLUG = 'mcc_settings';
-	public const SETTINGS_OPTION_NAME = 'mcc_general_settings';
-	public const OPTION_API_SOURCE = 'mcc_api_source';
-	public const OPTION_SELECTED_COINS = 'mcc_selected_coins';
+	public const PAGE_SLUG = 'mcpc_settings';
+	public const SETTINGS_OPTION_NAME = 'mcpc_general_settings';
+	public const OPTION_API_SOURCE = 'mcpc_api_source';
+	public const OPTION_SELECTED_COINS = 'mcpc_selected_coins';
 	private const MAX_SELECTABLE_COINS = 50;
 
 	/**
@@ -101,15 +101,15 @@ final class Admin_Settings {
 	/**
 	 * Check if the coins list should be updated when the settings are saved.
 	 *
-	 * @filter update_option_mcc_general_settings 10 2
+	 * @filter update_option_mcpc_general_settings 10 2
 	 *
 	 * @param array $old_value Settings stored before the update.
 	 * @param array $new_value New settings to store.
 	 */
 	public function maybe_update_coins_list( array $old_value, array $new_value ): void {
 		// Check if API source was changed.
-		$old_source = $old_value['mcc_api_source'] ?? '';
-		$new_source = $new_value['mcc_api_source'] ?? '';
+		$old_source = $old_value['mcpc_api_source'] ?? '';
+		$new_source = $new_value['mcpc_api_source'] ?? '';
 		$require_update = $old_source !== $new_source;
 
 		/**
@@ -118,7 +118,7 @@ final class Admin_Settings {
 		 * @param
 		 */
 		$require_update = apply_filters(
-			'mcc_require_coins_list_update_after_settings_saving',
+			'mcpc_require_coins_list_update_after_settings_saving',
 			$require_update,
 			$old_value,
 			$new_value
@@ -141,25 +141,26 @@ final class Admin_Settings {
 			]
 		);
 
-		$api_section = 'mcc_api_settings_section';
+		$api_section = 'mcpc_api_settings_section';
 		add_settings_section(
 			$api_section,
-			__( 'API Configuration', 'multi-crypto-convert' ),
+			__( 'API Configuration', 'multi-crypto-price-converter' ),
 			[ $this, 'render_api_settings_section' ],
 			self::PAGE_SLUG
 		);
 
 		add_settings_field(
 			self::OPTION_API_SOURCE,
-			__( 'API Source', 'multi-crypto-convert' ),
+			__( 'API Source', 'multi-crypto-price-converter' ),
 			function () {
 				$current_source = $this->get_settings()[ self::OPTION_API_SOURCE ] ?? '';
 				?>
 				<select
-					id="mcc_api_source"
+					id="mcpc_api_source"
 					name="<?php printf( '%s[%s]', esc_attr( self::SETTINGS_OPTION_NAME ), esc_attr( self::OPTION_API_SOURCE ) ); ?>"
 					class="regular-text"
 				>
+					<option value=""></option>
 					<?php foreach ( $this->factory->get_available_sources() as $value => $label ) : ?>
 						<option
 							value="<?php echo esc_attr( $value ); ?>"
@@ -184,20 +185,20 @@ final class Admin_Settings {
 		 * @param string $page_slug The settings page slug.
 		 * @param string $section_id The settings section ID.
 		 */
-		do_action( 'mcc_register_client_settings_fields', self::PAGE_SLUG, $api_section );
+		do_action( 'mcpc_register_client_settings_fields', self::PAGE_SLUG, $api_section );
 
 		// Coins Selection Section.
-		$coins_section = 'mcc_coins_selection_section';
+		$coins_section = 'mcpc_coins_selection_section';
 		add_settings_section(
 			$coins_section,
-			__( 'Available Coins for Blocks', 'multi-crypto-convert' ),
+			__( 'Available Coins for Blocks', 'multi-crypto-price-converter' ),
 			[ $this, 'render_coins_selection_section' ],
 			self::PAGE_SLUG
 		);
 
 		add_settings_field(
 			self::OPTION_SELECTED_COINS,
-			__( 'Select Coins', 'multi-crypto-convert' ),
+			__( 'Select Coins', 'multi-crypto-price-converter' ),
 			[ $this, 'render_coins_selection_field' ],
 			self::PAGE_SLUG,
 			$coins_section
@@ -232,7 +233,7 @@ final class Admin_Settings {
 		 * @param array $sanitized The sanitized settings array.
 		 * @param array $input The original input settings array.
 		 */
-		$sanitized = apply_filters( 'mcc_sanitize_client_settings', $sanitized, $input );
+		$sanitized = apply_filters( 'mcpc_sanitize_client_settings', $sanitized, $input );
 
 		return $sanitized;
 	}
@@ -244,7 +245,7 @@ final class Admin_Settings {
 		echo wp_kses_post(
 			sprintf(
 				/* translators: %d is the maximum number of coins that can be selected */
-				__( 'Select which cryptocurrencies should be available for use in converter blocks (maximum %d coins). Only coins selected here will be available when configuring blocks.', 'multi-crypto-convert' ),
+				__( 'Select which cryptocurrencies should be available for use in converter blocks (maximum %d coins). Only coins selected here will be available when configuring blocks.', 'multi-crypto-price-converter' ),
 				self::MAX_SELECTABLE_COINS
 			)
 		);
@@ -260,22 +261,22 @@ final class Admin_Settings {
 			$selected_coins_ids = $this->get_selected_coins_ids();
 
 			if ( is_wp_error( $available_coins ) ) {
-				echo '<p>' . esc_html__( 'An error getting the coins has occurred.', 'multi-crypto-convert' ) . '</p>';
+				echo '<p>' . esc_html__( 'An error getting the coins has occurred.', 'multi-crypto-price-converter' ) . '</p>';
 				return;
 			}
 
 			if ( empty( $available_coins ) ) {
-				echo '<p>' . esc_html__( 'No coins available. Please configure your API source and refresh the coin list.', 'multi-crypto-convert' ) . '</p>';
+				echo '<p>' . esc_html__( 'No coins available. Please configure your API source and refresh the coin list.', 'multi-crypto-price-converter' ) . '</p>';
 				return;
 			}
 
 			$field_name = sprintf( '%s[%s][]', esc_attr( self::SETTINGS_OPTION_NAME ), esc_attr( self::OPTION_SELECTED_COINS ) );
 			?>
 			<select
-				id="mcc-coins-selection"
+				id="mcpc-coins-selection"
 				name="<?php echo esc_attr( $field_name ); ?>"
 				multiple="multiple"
-				class="mcc-coins-select2"
+				class="mcpc-coins-select2"
 			>
 				<?php foreach ( $available_coins as $coin ) : ?>
 					<option
@@ -291,7 +292,7 @@ final class Admin_Settings {
 				<?php
 				printf(
 					/* translators: %1$d is the number of available coins in the source, %2$d is the maximum coins that can be selected. */
-					esc_html__( 'Available coins found in the source: %1$d. Maximum %2$d coins can be selected.', 'multi-crypto-convert' ),
+					esc_html__( 'Available coins found in the source: %1$d. Maximum %2$d coins can be selected.', 'multi-crypto-price-converter' ),
 					count( $available_coins ),
 					esc_html( (string) self::MAX_SELECTABLE_COINS )
 				);
@@ -299,7 +300,7 @@ final class Admin_Settings {
 			</p>
 			<?php
 		} catch ( \Exception $e ) {
-			echo '<p>' . esc_html__( 'Error loading coins. Please configure your API source first.', 'multi-crypto-convert' ) . '</p>';
+			echo '<p>' . esc_html__( 'Error loading coins. Please configure your API source first.', 'multi-crypto-price-converter' ) . '</p>';
 		}
 	}
 
@@ -307,7 +308,7 @@ final class Admin_Settings {
 	 * Renders the API settings section description.
 	 */
 	public function render_api_settings_section(): void {
-		echo esc_html__( 'Configure your cryptocurrency data source and API credentials.', 'multi-crypto-convert' );
+		echo esc_html__( 'Configure your cryptocurrency data source and API credentials.', 'multi-crypto-price-converter' );
 	}
 
 	/**
@@ -315,8 +316,8 @@ final class Admin_Settings {
 	 */
 	public function register_menu(): void {
 		add_menu_page(
-			__( 'Multi Crypto Price Converter Settings', 'multi-crypto-convert' ),
-			__( 'Multi Crypto Price Converter', 'multi-crypto-convert' ),
+			__( 'Multi Crypto Price Converter Settings', 'multi-crypto-price-converter' ),
+			__( 'Multi Crypto Price Converter', 'multi-crypto-price-converter' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			[ $this, 'render_settings_page' ],
@@ -330,7 +331,7 @@ final class Admin_Settings {
 	 */
 	public function render_settings_page(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'multi-crypto-convert' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'multi-crypto-price-converter' ) );
 		}
 
 		// Add error/update messages.
@@ -338,8 +339,8 @@ final class Admin_Settings {
 		if ( isset( $_GET['settings-updated'] ) ) {
 			add_settings_error(
 				self::PAGE_SLUG,
-				'mcc_settings_updated',
-				__( 'Settings Saved', 'multi-crypto-convert' ),
+				'mcpc_settings_updated',
+				__( 'Settings Saved', 'multi-crypto-price-converter' ),
 				'updated'
 			);
 		}
@@ -349,7 +350,7 @@ final class Admin_Settings {
 
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Multi Crypto Price Converter Settings', 'multi-crypto-convert' ); ?></h1>
+			<h1><?php esc_html_e( 'Multi Crypto Price Converter Settings', 'multi-crypto-price-converter' ); ?></h1>
 
 			<form method="post" action="options.php">
 				<?php settings_fields( self::PAGE_SLUG ); ?>
@@ -386,15 +387,15 @@ final class Admin_Settings {
 		);
 
 		wp_enqueue_script(
-			'mcc-admin-settings',
-			plugins_url( 'build/js/admin-settings.js', MCC_PLUGIN_FILE ),
+			'mcpc-admin-settings',
+			plugins_url( 'build/js/admin-settings.js', MCPC_PLUGIN_FILE ),
 			[ 'jquery' ],
-			MCC_PLUGIN_VERSION,
+			MCPC_PLUGIN_VERSION,
 			true
 		);
 
 		wp_localize_script(
-			'mcc-admin-settings',
+			'mcpc-admin-settings',
 			'mccSettings',
 			[
 				'maxCoins' => self::MAX_SELECTABLE_COINS,

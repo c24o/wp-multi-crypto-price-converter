@@ -4,19 +4,19 @@ return array(
 	'converter' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'multi-crypto-convert/converter',
+		'name' => 'multi-crypto-price-converter/converter',
 		'version' => '0.1.0',
-		'title' => 'Multi Crypto Converter',
+		'title' => 'Multi Crypto Price Converter',
 		'category' => 'widgets',
 		'icon' => 'money-alt',
-		'description' => 'Widget to convert a value to multiple cryptocurrencies.',
+		'description' => 'Widget to convert multiple cryptocurrencies prices at once.',
 		'example' => array(
 			
 		),
 		'supports' => array(
 			'html' => false
 		),
-		'textdomain' => 'multi-crypto-convert-wp-plugin',
+		'textdomain' => 'multi-crypto-price-converter',
 		'editorScript' => 'file:./index.js',
 		'style' => 'file:./style-index.css',
 		'viewScript' => 'file:./view.js',

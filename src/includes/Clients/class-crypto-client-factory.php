@@ -2,12 +2,12 @@
 /**
  * Crypto Client Factory
  *
- * @package Multi_Crypto_Convert\Clients
+ * @package Multi_Crypto_Price_Converter\Clients
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Clients;
+namespace Multi_Crypto_Price_Converter\Clients;
 
 use Psr\SimpleCache\CacheInterface;
 
@@ -46,7 +46,7 @@ final class Crypto_Client_Factory {
 				esc_html(
 					sprintf(
 						// translators: %s is the unsupported source identifier.
-						__( 'Unsupported crypto source: %s', 'multi-crypto-convert' ),
+						__( 'Unsupported crypto source: %s', 'multi-crypto-price-converter' ),
 						$source
 					)
 				)

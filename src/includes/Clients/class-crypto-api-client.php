@@ -2,15 +2,15 @@
 /**
  * Crypto API Client Interface
  *
- * @package Multi_Crypto_Convert\Clients
+ * @package Multi_Crypto_Price_Converter\Clients
  */
 
 declare( strict_types=1 );
 
-namespace Multi_Crypto_Convert\Clients;
+namespace Multi_Crypto_Price_Converter\Clients;
 
-use Multi_Crypto_Convert\Entities\Coin_Entity;
-use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
+use Multi_Crypto_Price_Converter\Entities\Coin_Entity;
+use Multi_Crypto_Price_Converter\Entities\Crypto_Price_Entity;
 use WP_Error;
 
 /**

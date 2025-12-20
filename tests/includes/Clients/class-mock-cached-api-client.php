@@ -2,16 +2,16 @@
 /**
  * Mock implementation of Abstract_Cached_API_Client for testing.
  *
- * @package Multi_Crypto_Convert/Tests/Clients
+ * @package Multi_Crypto_Price_Converter/Tests/Clients
  */
 
 declare( strict_types=1 );
 
-namespace Tests\Multi_Crypto_Convert\Clients;
+namespace Tests\Multi_Crypto_Price_Converter\Clients;
 
-use Multi_Crypto_Convert\Clients\Abstract_Cached_API_Client;
-use Multi_Crypto_Convert\Entities\Crypto_Price_Entity;
-use Multi_Crypto_Convert\Entities\Coin_Entity;
+use Multi_Crypto_Price_Converter\Clients\Abstract_Cached_API_Client;
+use Multi_Crypto_Price_Converter\Entities\Crypto_Price_Entity;
+use Multi_Crypto_Price_Converter\Entities\Coin_Entity;
 use Psr\SimpleCache\CacheInterface;
 use WP_Error;
 
