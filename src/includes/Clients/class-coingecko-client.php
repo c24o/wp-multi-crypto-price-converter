@@ -27,6 +27,10 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	public const API_KEY_FIELD = 'coingecko_api_key';
 	public const API_KEY_TYPE_FIELD = 'coingecko_api_key_type';
 	public const DEFAULT_API_KEY_TYPE = 'demo';
+	public const UPDATE_INTERVAL_FIELD = 'coingecko_update_interval';
+	public const DEFAULT_UPDATE_INTERVAL = 60;
+	private const MIN_UPDATE_INTERVAL = 5;
+	private const MAX_UPDATE_INTERVAL = 3600;
 
 	/**
 	 * Constructor.
@@ -130,6 +134,39 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 			$page_slug,
 			$section_id
 		);
+
+		add_settings_field(
+			self::UPDATE_INTERVAL_FIELD,
+			__( 'Update Interval (seconds)', 'multi-crypto-price-converter' ),
+			function () {
+				$current_interval = $this->settings[ self::UPDATE_INTERVAL_FIELD ] ?? self::DEFAULT_UPDATE_INTERVAL;
+				?>
+				<input
+					type="number"
+					id="mcpc_update_interval"
+					name="<?php printf( '%s[%s]', esc_attr( Admin_Settings::SETTINGS_OPTION_NAME ), esc_attr( self::UPDATE_INTERVAL_FIELD ) ); ?>"
+					value="<?php echo esc_attr( (string) $current_interval ); ?>"
+					class="regular-text"
+					min="<?php echo esc_attr( self::MIN_UPDATE_INTERVAL ); ?>"
+					max="<?php echo esc_attr( self::MAX_UPDATE_INTERVAL ); ?>"
+				/>
+				<p class="description">
+					<?php
+					echo esc_html(
+						sprintf(
+							// translators: %1$d is the minimum update interval, %2$d is the maximum update interval.
+							__( 'Set the frequency in seconds for the cron task to refresh prices. Min: %1$d, Max: %2$d (1 hour).', 'multi-crypto-price-converter' ),
+							self::MIN_UPDATE_INTERVAL,
+							self::MAX_UPDATE_INTERVAL
+						)
+					);
+					?>
+				</p>
+				<?php
+			},
+			$page_slug,
+			$section_id
+		);
 	}
 
 	/**
@@ -143,9 +180,15 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 		$sanitized[ self::API_KEY_FIELD ] = sanitize_text_field( $input[ self::API_KEY_FIELD ] ?? '' );
 		$sanitized[ self::API_KEY_TYPE_FIELD ] = isset( $input[ self::API_KEY_TYPE_FIELD ] ) && in_array(
 			$input[ self::API_KEY_TYPE_FIELD ],
-			$this->get_api_key_types(),
+			array_keys( $this->get_api_key_types() ),
 			true
 		) ? $input[ self::API_KEY_TYPE_FIELD ] : self::DEFAULT_API_KEY_TYPE;
+
+		$interval = (int) $input[ self::UPDATE_INTERVAL_FIELD ] ?? self::DEFAULT_UPDATE_INTERVAL;
+		if ( $interval < self::MIN_UPDATE_INTERVAL || $interval > self::MAX_UPDATE_INTERVAL ) {
+			$interval = self::DEFAULT_UPDATE_INTERVAL;
+		}
+		$sanitized[ self::UPDATE_INTERVAL_FIELD ] = $interval;
 
 		return $sanitized;
 	}
@@ -203,9 +246,19 @@ final class Coingecko_Client extends Abstract_Cached_API_Client {
 	 * @phpstan-return array{interval: int, display: string}
 	 */
 	public function get_prices_update_interval_data(): array {
+		$interval = $this->settings[ self::UPDATE_INTERVAL_FIELD ] ?? self::DEFAULT_UPDATE_INTERVAL;
 		return [
-			'interval' => 900, // 15 minutes due to the rate limit for the free tier.
-			'display'  => __( 'Every 15 Minutes', 'multi-crypto-price-converter' ),
+			'interval' => (int) $interval,
+			'display'  => sprintf(
+				/* translators: %d is the number of seconds. */
+				_n(
+					'Every %d second',
+					'Every %d seconds',
+					(int) $interval,
+					'multi-crypto-price-converter'
+				),
+				(int) $interval
+			),
 		];
 	}
 

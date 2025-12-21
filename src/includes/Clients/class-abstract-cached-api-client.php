@@ -31,7 +31,7 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	 * Set up WP-Cron for price updates.
 	 */
 	public function __construct() {
-		add_action( 'init', [ $this, 'update_prices_schedule' ] );
+		add_action( 'init', [ $this, 'schedule_update_prices' ] );
 		add_action( $this->get_cron_hook(), [ $this, 'fetch_and_cache_prices' ] );
 		add_action( 'cron_schedules', [ $this, 'add_custom_cron_interval' ] );
 	}
@@ -103,12 +103,22 @@ abstract class Abstract_Cached_API_Client implements Crypto_API_Client {
 	}
 
 	/**
-	 * Sets up the necessary WP-Cron schedule to periodically update prices.
+	 * Sets up the necessary WP-Cron task to periodically update prices.
 	 */
-	public function update_prices_schedule(): void {
-		if ( ! wp_next_scheduled( $this->get_cron_hook() ) ) {
+	public function schedule_update_prices(): void {
+		if ( ! $this->get_next_update_prices_scheduled() ) {
 			wp_schedule_event( time(), $this->get_cron_interval(), $this->get_cron_hook() );
 		}
+	}
+
+	/**
+	 * Get the scheduled time to run the next update of prices.
+	 *
+	 * @return int The Unix timestamp to run the next update or false if there
+	 * isn't an update scheduled.
+	 */
+	public function get_next_update_prices_scheduled(): int|bool {
+		return wp_next_scheduled( $this->get_cron_hook() );
 	}
 
 	/**

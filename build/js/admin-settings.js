@@ -10,7 +10,7 @@
 var MccAdminSettings;
 (function (MccAdminSettings) {
     function initializeCoinsInput() {
-        const coinsInputSelector = '.mcpc-coins-select2';
+        const coinsInputSelector = '.mcc-coins-select2';
         const coinsInput = jQuery(coinsInputSelector);
         // Initialize Select2 with search functionality.
         coinsInput.select2({

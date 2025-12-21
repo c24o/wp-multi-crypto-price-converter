@@ -159,11 +159,29 @@ final class Price_Rest_Controller {
 				$prices
 			);
 
+			/**
+			 * Calculate the next update time with a jitter. A random delay
+			 * (jitter) is added to the next scheduled cron task time. This
+			 * ensures that not all clients try to fetch new data at the exact
+			 * same millisecond when the cache expires(Thundering Herd Problem).
+			 * Instead, requests are spread out over a small window of time.
+			 */
+			$next_scheduled = $this->client->get_next_update_prices_scheduled();
+			if ( ! $next_scheduled ) {
+				$next_scheduled = time() + $this->client->get_prices_update_interval_data()['interval'];
+			}
+			$jitter = wp_rand( 5, 30 );
+			// Add a delay for the request to get the prices from the client.
+			$client_request_delay = 10;
+			$next_update = $next_scheduled + $client_request_delay + $jitter;
+
 			return new WP_REST_Response(
 				[
 					'success' => true,
-					'data'    => $prices_data,
-					'count'   => count( $prices_data ),
+					'data'    => [
+						'prices'      => $prices_data,
+						'next_update' => $next_update,
+					],
 				],
 				200
 			);

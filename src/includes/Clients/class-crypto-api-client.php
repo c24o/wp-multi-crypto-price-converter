@@ -58,4 +58,25 @@ interface Crypto_API_Client {
 	 * Render the attribution for usage of the API.
 	 */
 	public function render_attribution_content(): void;
+
+	/**
+	 * Sets up the necessary WP-Cron task to periodically update prices.
+	 */
+	public function schedule_update_prices(): void;
+
+	/**
+	 * Get the scheduled time to run the next update of prices.
+	 *
+	 * @return int The Unix timestamp to run the next update or false if there
+	 * isn't an update scheduled.
+	 */
+	public function get_next_update_prices_scheduled(): int|bool;
+
+	/**
+	 * Returns the update interval data for scheduling.
+	 *
+	 * @return array The interval data.
+	 * @phpstan-return array{interval: int, display: string}
+	 */
+	public function get_prices_update_interval_data(): array;
 }

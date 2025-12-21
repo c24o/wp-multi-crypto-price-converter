@@ -24,14 +24,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const UPDATE_INTERVAL_MS = 60000;
-
 /**
  * Fetch prices from the REST API endpoint.
  *
  * @param {string} coinsParam - Comma-separated coin symbols.
  * @param {AbortSignal} [signal] - Optional abort signal for the fetch request.
- * @return {Promise<PricesMap>} A map of coin symbols to their prices in USD.
+ * @return {Promise<FetchPricesResponse>} A map of coin symbols to their prices in USD and the next update timestamp.
  */
 async function fetchPrices(coinsParam, signal) {
   try {
@@ -42,12 +40,15 @@ async function fetchPrices(coinsParam, signal) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
-    if (data.success && data.data) {
+    if (data.success && data.data?.prices) {
       const pricesMap = {};
-      data.data.forEach(item => {
+      data.data.prices.forEach(item => {
         pricesMap[item.symbol] = parseFloat(item.price_usd);
       });
-      return pricesMap;
+      return {
+        prices: pricesMap,
+        next_update: data.data.next_update
+      };
     }
     throw new Error(data.message || 'Invalid API response');
   } catch (error) {
@@ -55,7 +56,10 @@ async function fetchPrices(coinsParam, signal) {
       throw error;
     }
     console.error('Failed to fetch prices:', error);
-    return {};
+    return {
+      prices: {},
+      next_update: 0
+    };
   }
 }
 
@@ -103,13 +107,30 @@ function FrontendConverter({
     let timeoutId;
     const updatePrices = async () => {
       try {
-        const fetchedPrices = await fetchPrices(coinsParam, controller.signal);
+        const {
+          prices: fetchedPrices,
+          next_update
+        } = await fetchPrices(coinsParam, controller.signal);
         // Only update if we have data, otherwise keep old prices or show error
         if (Object.keys(fetchedPrices).length > 0) {
           setPrices(fetchedPrices);
           setError(false);
         } else {
           setError(true);
+        }
+        if (!controller.signal.aborted) {
+          let delay = 60000; // Default fallback delay.
+          if (next_update) {
+            const nowSeconds = Date.now() / 1000;
+            const diff = next_update - nowSeconds;
+            /**
+             * If the scheduled time is in the future, wait for it.
+             * If it's in the past (or very close), wait at least 5
+             * seconds to avoid tight loops.
+             */
+            delay = diff > 0 ? diff * 1000 : 5000;
+          }
+          timeoutId = setTimeout(updatePrices, delay);
         }
       } catch (err) {
         // Ignore abort errors
@@ -119,8 +140,6 @@ function FrontendConverter({
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
-          // Schedule the next update only after the current one finishes (Recursive Polling)
-          timeoutId = setTimeout(updatePrices, UPDATE_INTERVAL_MS);
         }
       }
     };
