@@ -16,7 +16,7 @@ declare const mccSettings: MccSettings;
 namespace MccAdminSettings {
 
 	export function initializeCoinsInput(): void {
-		const coinsInputSelector: string = '.mcc-coins-select2';
+		const coinsInputSelector: string = '.mcpc-coins-select2';
 		const coinsInput = jQuery(coinsInputSelector);
 
 		// Initialize Select2 with search functionality.

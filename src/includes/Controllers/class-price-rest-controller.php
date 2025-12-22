@@ -25,6 +25,10 @@ final class Price_Rest_Controller {
 	private const API_NAMESPACE = 'mcc/v1';
 	private const ENDPOINT_PRICES = 'prices';
 	private const ENDPOINT_SELECTED_COINS = 'selected-available-coins';
+	private const MIN_JITTER = 5;
+	private const MAX_JITTER = 30;
+
+
 
 	/**
 	 * Constructor.
@@ -170,10 +174,8 @@ final class Price_Rest_Controller {
 			if ( ! $next_scheduled ) {
 				$next_scheduled = time() + $this->client->get_prices_update_interval_data()['interval'];
 			}
-			$jitter = wp_rand( 5, 30 );
-			// Add a delay for the request to get the prices from the client.
-			$client_request_delay = 10;
-			$next_update = $next_scheduled + $client_request_delay + $jitter;
+			$jitter = wp_rand( self::MIN_JITTER, self::MAX_JITTER );
+			$next_update = $next_scheduled + $jitter;
 
 			return new WP_REST_Response(
 				[
