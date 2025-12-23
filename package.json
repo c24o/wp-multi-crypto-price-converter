@@ -1,6 +1,6 @@
 {
 	"name": "multi-crypto-price-converter",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "A WordPress plugin that lists cryptocurrency prices and allows instant conversion of prices between any of the listed coins.",
 	"author": "Carlos Guzman",
 	"license": "MIT License",
@@ -13,7 +13,7 @@
 		"lint:css": "wp-scripts lint-style",
 		"lint:js": "wp-scripts lint-js",
 		"packages-update": "wp-scripts packages-update",
-		"plugin-zip": "wp-scripts plugin-zip",
+		"plugin-zip": "composer install --no-dev --optimize-autoloader && wp-scripts plugin-zip && composer install",
 		"start": "npm run build:ts:watch & wp-scripts start --blocks-manifest"
 	},
 	"devDependencies": {

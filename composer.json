@@ -18,13 +18,13 @@
 	},
 	"autoload": {
 		"classmap": [
-			"src/includes/",
+			"includes/",
 			"tests/includes/"
 		]
 	},
 	"autoload-dev": {
 		"classmap": [
-			"src/includes/",
+			"includes/",
 			"tests/includes/"
 		]
 	},
