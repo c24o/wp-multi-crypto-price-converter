@@ -37,8 +37,8 @@ If you are cloning this repository for review or development, follow these steps
 1.  **Clone the repository** into your WordPress plugins directory:
     ```bash
     cd wp-content/plugins
-    git clone https://github.com/c24o/multi-crypto-convert-wp-plugin.git
-    cd multi-crypto-convert-wp-plugin
+    git clone https://github.com/c24o/wp-multi-crypto-price-converter.git
+    cd wp-multi-crypto-price-converter
     ```
 
 2.  **Install PHP Dependencies:**
@@ -51,7 +51,7 @@ If you are cloning this repository for review or development, follow these steps
     The React block needs to be compiled.
     ```bash
     npm install
-    npm run build
+    npm run build:front
     ```
 
 4.  **Activate:**
