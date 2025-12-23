@@ -18,8 +18,7 @@
 	},
 	"autoload": {
 		"classmap": [
-			"includes/",
-			"tests/includes/"
+			"includes/"
 		]
 	},
 	"autoload-dev": {
@@ -29,8 +28,8 @@
 		]
 	},
 	"scripts": {
-		"test": "phpunit --configuration tests/phpunit.xml",
-		"phpstan": "vendor/phpstan/phpstan/phpstan analyse --configuration=phpstan.neon",
+		"test": "vendor/bin/phpunit --configuration tests/phpunit.xml",
+		"phpstan": "vendor/bin/phpstan analyse --configuration=phpstan.neon",
 		"phpcs": "vendor/bin/phpcs --standard=phpcs.xml",
 		"lint": [
 			"@phpcs",

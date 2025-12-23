@@ -1,5 +1,9 @@
 tests/wp-tests-config.php
 
+# Ignore dist folders and files.
+/multi-crypto-price-converter/
+/multi-crypto-price-converter.zip
+
 # Ignore composer vendor folder.
 /vendor/
 

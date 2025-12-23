@@ -19,7 +19,7 @@
     </rule>
 
     <file>src</file>
-    <file>multi-crypto-convert.php</file>
+    <file>multi-crypto-price-converter.php</file>
     <exclude-pattern>build/*</exclude-pattern>
 
     <arg name="basepath" value="."/>

@@ -6,15 +6,18 @@
 	"license": "MIT License",
 	"main": "build/index.js",
 	"scripts": {
-		"build": "npm run build:ts && wp-scripts build --blocks-manifest",
-		"build:ts": "tsc",
-		"build:ts:watch": "tsc --watch",
+		"clean": "rm -rf multi-crypto-price-converter",
+		"build:front": "wp-scripts build --blocks-manifest && tsc",
+		"build:php": "composer install --no-dev && php-scoper add-prefix -o multi-crypto-price-converter --force && npm run build:autoload && composer install",
+		"build:autoload": "cp composer.json multi-crypto-price-converter/ && composer --no-dev dump-autoload --classmap-authoritative --working-dir=multi-crypto-price-converter && rm multi-crypto-price-converter/composer.json",
+		"copy:plugin-files": "cp -r build/ readme.txt LICENSE multi-crypto-price-converter/",
+		"zip": "zip -r multi-crypto-price-converter.zip multi-crypto-price-converter/",
+		"bundle": "npm run clean && npm run build:php && npm run build:front && npm run copy:plugin-files && npm run zip",
 		"format": "wp-scripts format",
 		"lint:css": "wp-scripts lint-style",
 		"lint:js": "wp-scripts lint-js",
 		"packages-update": "wp-scripts packages-update",
-		"plugin-zip": "composer install --no-dev --optimize-autoloader && wp-scripts plugin-zip && composer install",
-		"start": "npm run build:ts:watch & wp-scripts start --blocks-manifest"
+		"start": "wp-scripts start --block-manifest & tsc --watch"
 	},
 	"devDependencies": {
 		"@codeamp/block-components": "^0.0.1-beta.14",

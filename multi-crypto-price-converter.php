@@ -1,10 +1,11 @@
 <?php
 /**
  * Plugin Name: Multi Crypto Price Converter
- * Plugin URI:  https://github.com/c24o/multi-crypto-convert-wp-plugin
+ * Plugin URI:  https://github.com/c24o/wp-multi-crypto-price-converter
  * Description: A WordPress plugin that lists cryptocurrency prices and allows instant conversion of prices between any of the listed coins.
  * Version:     1.0.0
  * Author:      Carlos Guzman
+ * Author URI:  https://carlosguzman.dev/
  * Text Domain: multi-crypto-price-converter
  *
  * @package Multi_Crypto_Price_Converter
