@@ -22,13 +22,11 @@ use WP_REST_Response;
  */
 final class Price_Rest_Controller {
 
-	private const API_NAMESPACE = 'mcc/v1';
-	private const ENDPOINT_PRICES = 'prices';
-	private const ENDPOINT_SELECTED_COINS = 'selected-available-coins';
-	private const MIN_JITTER = 5;
-	private const MAX_JITTER = 30;
-
-
+	public const API_NAMESPACE = 'mcc/v1';
+	public const ENDPOINT_PRICES = 'prices';
+	public const ENDPOINT_SELECTED_COINS = 'selected-available-coins';
+	public const MIN_JITTER = 5;
+	public const MAX_JITTER = 30;
 
 	/**
 	 * Constructor.
@@ -163,26 +161,12 @@ final class Price_Rest_Controller {
 				$prices
 			);
 
-			/**
-			 * Calculate the next update time with a jitter. A random delay
-			 * (jitter) is added to the next scheduled cron task time. This
-			 * ensures that not all clients try to fetch new data at the exact
-			 * same millisecond when the cache expires(Thundering Herd Problem).
-			 * Instead, requests are spread out over a small window of time.
-			 */
-			$next_scheduled = $this->client->get_next_update_prices_scheduled();
-			if ( ! $next_scheduled ) {
-				$next_scheduled = time() + $this->client->get_prices_update_interval_data()['interval'];
-			}
-			$jitter = wp_rand( self::MIN_JITTER, self::MAX_JITTER );
-			$next_update = $next_scheduled + $jitter;
-
 			return new WP_REST_Response(
 				[
 					'success' => true,
 					'data'    => [
 						'prices'      => $prices_data,
-						'next_update' => $next_update,
+						'next_update' => $this->calculate_next_update_timestamp(),
 					],
 				],
 				200
@@ -245,5 +229,28 @@ final class Price_Rest_Controller {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Calculate the next update time with a jitter.
+	 *
+	 * A random delay (jitter) is added to the next scheduled cron task time.
+	 * This ensures that not all clients try to fetch new data at the exact
+	 * same millisecond when the cache expires (Thundering Herd Problem).
+	 * Instead, requests are spread out over a small window of time.
+	 *
+	 * @return int The Unix timestamp for the next update.
+	 */
+	private function calculate_next_update_timestamp(): int {
+		$next_scheduled = $this->client->get_next_update_prices_scheduled();
+		$current_time   = time();
+
+		if ( ! $next_scheduled || $next_scheduled < $current_time ) {
+			$interval       = $this->client->get_prices_update_interval_data()['interval'];
+			$next_scheduled = $current_time + $interval;
+		}
+
+		$jitter = wp_rand( self::MIN_JITTER, self::MAX_JITTER );
+		return $next_scheduled + $jitter;
 	}
 }

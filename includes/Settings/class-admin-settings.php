@@ -15,7 +15,7 @@ use Multi_Crypto_Price_Converter\Clients\Crypto_Client_Factory;
 /**
  * Manages the admin settings page for the Multi Crypto Price Converter plugin.
  */
-final class Admin_Settings {
+class Admin_Settings {
 
 	public const PAGE_SLUG = 'mcpc_settings';
 	public const SETTINGS_OPTION_NAME = 'mcpc_general_settings';

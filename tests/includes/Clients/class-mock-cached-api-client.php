@@ -172,4 +172,25 @@ class Mock_Cached_API_Client extends Abstract_Cached_API_Client {
 		}
 		return $entities;
 	}
+
+	/**
+	 * Register the object methods to different WP hooks.
+	 */
+	public function register_hooks(): void {
+	}
+
+	/**
+	 * Some API services might require attribution for usage.
+	 *
+	 * @return bool True if attribution is required, otherwise false.
+	 */
+	public function is_attribution_required(): bool {
+		return false;
+	}
+
+	/**
+	 * Render the attribution for usage of the API.
+	 */
+	public function render_attribution_content(): void {
+	}
 }
