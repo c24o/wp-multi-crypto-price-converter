@@ -141,6 +141,11 @@ final class Price_Rest_Controller {
 	 * @return WP_REST_Response The response containing price data.
 	 */
 	public function get_prices( WP_REST_Request $request ): WP_REST_Response {
+		// Prevent caching of this specific endpoint.
+		if ( ! defined( 'DONOTCACHEPAGE' ) ) {
+			define( 'DONOTCACHEPAGE', true );
+		}
+
 		try {
 			// Get coins parameter (already sanitized by REST API).
 			$coins_param = $request->get_param( 'coins' );
@@ -161,7 +166,7 @@ final class Price_Rest_Controller {
 				$prices
 			);
 
-			return new WP_REST_Response(
+			$response = new WP_REST_Response(
 				[
 					'success' => true,
 					'data'    => [
@@ -171,6 +176,12 @@ final class Price_Rest_Controller {
 				],
 				200
 			);
+
+			// Add headers to prevent browser/CDN caching.
+			$response->header( 'Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0' );
+			$response->header( 'Pragma', 'no-cache' );
+
+			return $response;
 		} catch ( \Exception $e ) {
 			return new WP_REST_Response(
 				[
